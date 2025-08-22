@@ -1,5 +1,5 @@
 from typing import List
-from fastapi import FastAPI, UploadFile, File, Body
+from fastapi import FastAPI, UploadFile, File, Body, Form
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.storage import GCSStorageService
 
@@ -19,33 +19,35 @@ def root():
     return {"message": "Hello from FastAPI 🚀"}
 
 @app.get("/files", response_model=List[str])
-def list_files(prefix: str = "school-game/knowledge-base/"):
-    files = googleStorageService.list_files(prefix)
-    return [f.split("/")[-1] for f in files]
+def list_files(game_id: str = ""):
+    files = googleStorageService.list_files(game_id)
+    print("game_id from lis files", game_id)
+    print("files from lis files", files)
+    return files
 
-@app.get("/files/{file_name}")
-def get_file_content(file_name: str):
-    content = googleStorageService.read_file(file_name)
-    return {"filename": file_name, "content": content}
+@app.get("/files/content")
+def get_file_content(path: str):
+    content = googleStorageService.read_file(path)
+    return {"filename": path, "content": content}
 
 @app.post("/files/upload")
-async def upload_file(file: UploadFile = File(...)):
+async def upload_file(path: str = Form(...), file: UploadFile = File(...)):
     try:
         content = await file.read()
-        googleStorageService.upload_file(file.filename, content)
+        googleStorageService.upload_file(path, content)
         return {"message": "File uploaded successfully"}
     except Exception as e:
         return {"error": str(e)}
 
-@app.put("/files/update/{file_name}")
-def update_file(file_name: str, content: str = Body(..., embed=True)):
-    googleStorageService.update_file(file_name, content)
+@app.put("/files/update")
+def update_file(path: str, content: str = Body(..., embed=True)):
+    googleStorageService.update_file(path, content)
     return {"message": "File updated successfully"}
 
-@app.delete("/files/delete/{file_name}")
-def delete_file(file_name: str):
+@app.delete("/files/delete")
+def delete_file(path: str):
     try:
-        googleStorageService.delete_file(file_name)
+        googleStorageService.delete_file(path)
         return {"message": "File deleted successfully"}
     except Exception as e:
         return {"error": str(e)}
