@@ -37,8 +37,8 @@ app.add_middleware(
 
 googleStorageService = GCSStorageService("aigameschat-game-data")
 
-ENVIRONMENT = os.environ["ENVIRONMENT"]
-# ENVIRONMENT = "prod"
+# ENVIRONMENT = os.environ["ENVIRONMENT"]
+ENVIRONMENT = "prod"
 @app.get("/")
 def root():
     return {"message": "Hello from FastAPI 🚀"}
@@ -50,9 +50,8 @@ async def login(request: Request):
         print("redirect_uri for auth", redirect_uri)
         redirect_uri = request.url_for('auth_callback')
     else:
-        # redirect_uri = "https://fastapi-service-v4-427230556695.asia-south2.run.app/auth/callback"
-        pass
-    # print(f"🔗 Redirecting to Google OAuth with redirect URI: {redirect_uri}")
+        redirect_uri = "https://aigames-dashboard-be-437522952831.asia-south1.run.app/auth/callback"
+    print(f"🔗 Redirecting to Google OAuth with redirect URI: {redirect_uri}")
     return await oauth.google.authorize_redirect(request, redirect_uri)
 
 @app.get("/auth/callback")
@@ -79,7 +78,7 @@ async def auth_callback(request: Request):
             user_id = existing_user.userId
         access_token = token["access_token"]
         print(f"✅ Google login successful: {user_info}")
-        base_url = "http://localhost:8080/"
+        base_url = "http://localhost:8080/" if ENVIRONMENT == "dev" else "https://terra-ai-games-dash.vercel.app/"
         redirect_url = (
             f"{base_url}login-success"
             f"?token={access_token}"
@@ -90,7 +89,7 @@ async def auth_callback(request: Request):
         return RedirectResponse(redirect_url)
     except RequestException  as e:
         print(f"❌ Google OAuth failed: {e}")
-        base_error_url = "http://localhost:8080/"
+        base_error_url = "http://localhost:8080/" if ENVIRONMENT == "dev" else"https://terra-ai-games-dash.vercel.app/"
         return RedirectResponse(f"{base_error_url}unauthorized?error=oauth_failed")
 
 @app.get("/files", response_model=List[str])
