@@ -18,7 +18,7 @@ class LogServices:
         }
     
     def list_logs(self, fileId: str) -> List[Dict]:
-        doc_ref = self.collection.where("fileId" == fileId).order_by("createdAt").stream()
+        doc_ref = self.collection.where("fileId", "==", fileId).order_by("createdAt").stream()
         return [doc.to_dict() for doc in doc_ref]
     
     def delete_log(self, logId: str) -> Dict:
