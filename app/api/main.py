@@ -10,18 +10,19 @@ from app.core.storage import GCSStorageService
 from app.core.services.userService import userService
 from app.core.schema.userSchema import UserModel
 from starlette.middleware.sessions import SessionMiddleware
-from app.core.schema.fileSchema import FileMetaData
+# from app.core.schema.fileSchema import FileMetaData
 from app.core.services.fileService import fileServices
 from app.core.services.logService import logServices
-from google import genai
-from google.genai import types
-import io
-import mimetypes
-from google.cloud import storage
+# from google import genai
+# from google.genai import types
+# import io
+# import mimetypes
+# from google.cloud import storage
+from app.core.scheduler.geminiSchedular import start_scheduler, scheduler
 
-client = genai.Client(
-    api_key = "AIzaSyAO5d-UQflX90uYqkWxppH6Qrasv3WNEpk"
-)
+# client = genai.Client(
+#     api_key = "AIzaSyAO5d-UQflX90uYqkWxppH6Qrasv3WNEpk"
+# )
 
 app = FastAPI()
 
@@ -38,9 +39,20 @@ googleStorageService = GCSStorageService("aigameschat-game-data")
 
 # ENVIRONMENT = os.environ["ENVIRONMENT"]
 ENVIRONMENT = "prod"
+
+GAME_ID = "school-game"
 @app.get("/")
 def root():
     return {"message": "Hello from FastAPI 🚀"}
+
+
+@app.on_event("startup")
+def on_startup():
+    start_scheduler(GAME_ID, test_mode=False)
+
+@app.on_event("shutdown")
+def on_shutdown():
+    scheduler.shutdown()
 
 @app.get("/files/login")
 async def login(request: Request):
@@ -194,3 +206,15 @@ def list_meta(gameName: str):
 def get_logs(fileId: str) -> List[Dict]:
     logs = logServices.list_logs(fileId)
     return logs
+
+@app.get("/files/games")
+def get_all_games():
+    return googleStorageService.list_games()
+
+@app.post("/files/game/create")
+def create_game(game_id: str):
+    return googleStorageService.create_game(game_id)
+
+@app.delete("/files/game/delete")
+def delete_game(game_id: str):
+    return googleStorageService.delete_game(game_id)

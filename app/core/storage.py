@@ -21,7 +21,43 @@ class GCSStorageService:
         self.genai_client = genai.Client(api_key="AIzaSyAO5d-UQflX90uYqkWxppH6Qrasv3WNEpk")
         # self.genai_client = genai.Client(api_key=GENAI_API_KEY)
 
+    def list_games(self) -> List[str]:
+        try:
+            blobs = self.bucket.list_blobs()
+            games = set()
+            for blob in blobs:
+                parts = blob.name.split("/", 1)  # take text before first "/"
+                if parts and parts[0]:
+                    games.add(parts[0])
+
+            games_list = sorted(list(games))
+            print("games from bucket", games_list)
+            return games_list
+        except Exception as e:
+            raise RuntimeError(f"Failed to list games: {e}")
     
+    def debug_list(self):
+        blobs = list(self.bucket.list_blobs())
+        for b in blobs:
+            print("BLOB:", b.name)
+    
+    def create_game(self, game_id: str) -> str:
+        try:
+            placeholder_blob = self.bucket.blob(f"{game_id}/.keep")
+            placeholder_blob.upload_from_string("")
+            return f"Game folder {game_id} created."
+        except Exception as e:
+            raise RuntimeError(f"Failed to create game: {e}")
+    
+    def delete_game(self, game_id: str) -> str:
+        try:
+            blobs = self.bucket.list_blobs(prefix=f"{game_id}/")
+            for blob in blobs:
+                blob.delete()
+            return f"Game folder {game_id} deleted."
+        except Exception as e:
+            raise RuntimeError(f"Failed to delete game: {e}")
+
     def list_files(self, game_id: str = "" ) -> List[str]:
         try:
             full_prefix = f"{game_id}/"
