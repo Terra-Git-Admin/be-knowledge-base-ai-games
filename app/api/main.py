@@ -34,7 +34,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 googleStorageService = GCSStorageService("aigameschat-game-data")
 
 # ENVIRONMENT = os.environ["ENVIRONMENT"]
