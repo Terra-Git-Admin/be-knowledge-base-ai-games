@@ -40,7 +40,6 @@ googleStorageService = GCSStorageService("aigameschat-game-data")
 # ENVIRONMENT = os.environ["ENVIRONMENT"]
 ENVIRONMENT = "prod"
 
-GAME_ID = "school-game"
 @app.get("/")
 def root():
     return {"message": "Hello from FastAPI 🚀"}
@@ -48,7 +47,9 @@ def root():
 
 @app.on_event("startup")
 def on_startup():
-    start_scheduler(GAME_ID, test_mode=False)
+    games = googleStorageService.list_games()
+    for game in games:
+        start_scheduler(game, test_mode=False)
 
 @app.on_event("shutdown")
 def on_shutdown():
@@ -109,65 +110,6 @@ def list_files(game_id: str = ""):
     print("game_id from lis files", game_id)
     return files
 
-# @app.get("/files", response_model=List[str])
-# def list_files(
-#     game_id: str = "",
-#     preview_length: int = 250,
-# ):
-#     files = googleStorageService.list_files(game_id)
-#     print("game_id from list files", game_id)
-#     print("files from list files", files)
-#     seen_file_names = set()
-#     for file_path in files:
-#         try:
-#             # ✅ Extract only the filename (last part)
-#             file_name = file_path.rsplit("/", 1)[-1]
-#             if file_name in seen_file_names:
-#                 print(f"⚠️ Skipping duplicate file: {file_name}")
-#                 continue
-#             seen_file_names.add(file_name)
-
-#             # ✅ Read file content using full path
-#             full_path = f"{game_id}/{file_path}"
-#             content = googleStorageService.read_file(full_path)
-
-#             # ✅ Raw preview
-#             preview = content[:preview_length]
-
-#             gemini_file = client.files.upload(
-#                 file=io.BytesIO(content.encode("utf-8")),
-#                 config=types.UploadFileConfig(
-#                     mime_type="text/plain",
-#                     display_name=file_name
-#                 ),
-#             )
-#             # ✅ Metadata object
-#             metadata = FileMetaData(
-#                 fileName=file_name,
-#                 filePath=full_path,
-#                 gameName=game_id,
-#                 createdAt=datetime.utcnow(),
-#                 lastUpdatedAt=datetime.utcnow(),
-#                 raw_preview=preview,
-#                 geminiUploadTime=datetime.utcnow(),
-#                 geminiFileId=gemini_file.name,
-#             )
-
-#             # ✅ Save to Firestore
-#             fileServices.create_file(
-#                 metadata, 
-#                 updatedBy="system_seed", 
-#                 logs_service=logServices
-#             )
-
-#             print(f"✅ Seeded {file_path}")
-
-#         except Exception as e:
-#             print(f"❌ Failed {file_path}: {e}")
-
-#     return files
-
-
 @app.get("/files/content")
 def get_file_content(path: str):
     print("path for test", path)
@@ -199,6 +141,7 @@ def delete_file(path: str):
 @app.get("/files/meta/{gameName}")
 def list_meta(gameName: str):
     files = fileServices.list_files(gameName)
+    # fileServices.delete_dups()
     print("meta data files", files)
     return files
 

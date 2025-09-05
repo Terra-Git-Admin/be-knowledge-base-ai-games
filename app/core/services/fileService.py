@@ -6,6 +6,7 @@ from app.core.schema.logsSchema import Logs
 from typing import Dict, List, Optional
 from datetime import datetime
 from app.core.services.logService import LogServices
+from collections import defaultdict
 
 db = firestore.Client(project="aigameschat", database="school-game")
 
@@ -71,6 +72,35 @@ class FileServices:
         log = Logs(fileId=fileId, updatedBy=updatedBy)
         logs_service.create_log(log)
         return {"message": "File updated successfully"}
+    
+    def delete_dups(self):
+        docs = self.collection.stream()
+        grouped = defaultdict(list)
+        for doc in docs:
+            data = doc.to_dict()
+            file_path = data.get("filePath")
+            if file_path:
+                grouped[file_path].append((doc.id, data))
+        deleted_count = 0
+
+        for file_path, items in grouped.items():
+            if len(items) > 1:
+                print(f"⚠️ Duplicate found for {file_path}, count={len(items)}")
+
+                # Sort by createdAt (keep the oldest, delete the rest)
+                items.sort(key=lambda x: x[1].get("createdAt"))
+
+                # First one = keeper
+                keeper = items[0]
+                duplicates = items[1:]
+
+                for dup in duplicates:
+                    self.collection.document(dup[0]).delete()
+                    deleted_count += 1
+                    print(f"🗑️ Deleted duplicate: {dup[0]} for {file_path}")
+
+        print(f"✅ Finished. Deleted {deleted_count} duplicates.")
+
 
 
 
