@@ -20,7 +20,7 @@ class DeleteQueueServices:
     def create_delete_request(self, deleteQueue: DeleteQueue):
         doc_ref = self.collection.document(deleteQueue.requestId)
         doc_ref.set(deleteQueue.dict(exclude_none=True))
-        generalFunction.send_delete_request_slack(deleteQueue, self.CHANNEL)
+        # generalFunction.send_delete_request_slack(deleteQueue, self.CHANNEL)
         return {
             "message": "Delete request created successfully"
         }
