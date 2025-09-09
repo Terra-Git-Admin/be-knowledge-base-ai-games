@@ -1,5 +1,5 @@
-from google.cloud import storage
 import os
+from google.cloud import storage
 from typing import List
 from app.core.services.fileService import fileServices
 from app.core.services.logService import logServices
@@ -8,8 +8,11 @@ from datetime import datetime
 from google import genai
 from google.genai import types
 import io
+from dotenv import load_dotenv
+load_dotenv()
 
 GENAI_API_KEY = os.getenv("GENAI_API_KEY")
+db = os.getenv("DATABASE")
 
 class GCSStorageService:
     def __init__(self, bucket_name: str):
@@ -18,8 +21,7 @@ class GCSStorageService:
 
         if not GENAI_API_KEY:
             raise RuntimeError("GENAI_API_KEY is not set")
-        self.genai_client = genai.Client(api_key="AIzaSyAO5d-UQflX90uYqkWxppH6Qrasv3WNEpk")
-        # self.genai_client = genai.Client(api_key=GENAI_API_KEY)
+        self.genai_client = genai.Client(api_key=GENAI_API_KEY)
 
     def list_games(self) -> List[str]:
         try:
@@ -111,15 +113,14 @@ class GCSStorageService:
                 lastUpdatedAt=datetime.utcnow(),
                 raw_preview=file_content[:250],
                 geminiUploadTime=datetime.utcnow(),
-                geminiFileId=gemini_file.name
+                geminiFileId=gemini_file.name,
+                isDeleted= False
             )
 
             result = fileServices.create_file(
                 file=metaData, updatedBy=updated_by, logs_service=logServices
             )
             print("result of create file in firestore", result)
-        # except Exception as e:
-        #     raise RuntimeError(e)
         except Exception as e:
             import traceback
             print("🔥 Error in upload_file:", e)
@@ -160,7 +161,8 @@ class GCSStorageService:
             lastUpdatedAt=datetime.utcnow(),
             geminiUploadTime=datetime.utcnow(),
             geminiFileId=gemini_file.name,
-            raw_preview=content[:250]
+            raw_preview=content[:250],
+            isDeleted= False
         )
             result = fileServices.update_file(
             fileId=file_id,
@@ -183,3 +185,5 @@ class GCSStorageService:
             print(f"✅ Deleted {file_path} and its metadata/logs")
         except Exception as e:
             raise RuntimeError(e)
+
+googleStorageService = GCSStorageService(db)

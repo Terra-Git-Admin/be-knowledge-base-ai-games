@@ -1,9 +1,35 @@
 import uuid
+import requests
+from zoneinfo import ZoneInfo
+from datetime import datetime
+
 class GeneralFunctions:
     def __init__(self):
         pass
     def generate_id(self, initials: str) -> str:
         return f"{initials}-{str(uuid.uuid4())}"
+    
+    def send_delete_request_slack(self, delete_queue, channel_id: str):
+        url = "https://client-stage.letsterra.com/emails/slack-message"
+        local_time = delete_queue.createdAt.astimezone(ZoneInfo("Asia/Kolkata"))
+        subject = f"🗑️ Delete Request for {delete_queue.fileName}"
+        message = (
+            f"User *{delete_queue.createdBy}* has requested deletion of a file.\n\n"
+            f"📂 File Name: `{delete_queue.fileName}`\n"
+            f"🎮 Game Name: `{delete_queue.gameName}`\n"
+            f"📍 Path GCP Bucket: `{delete_queue.filePath}`\n"
+            f"🕒 Requested at: {local_time.strftime('%Y-%m-%d %H:%M:%S')}"
+        )
+        payload = {
+        "channelName": channel_id,
+        "subject": subject,
+        "message": message,
+    }
+        response = requests.post(url, json=payload)
+        try:
+            return response.json()
+        except ValueError:
+            return {"status": response.status_code, "text": response.text or "No response body"}
 
 generalFunction = GeneralFunctions()
 

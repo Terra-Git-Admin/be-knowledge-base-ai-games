@@ -15,3 +15,4 @@ class FileMetaData(BaseModel):
     raw_preview: str
     geminiUploadTime: Optional[datetime] = None
     geminiFileId: Optional[str] = None
+    isDeleted: bool = False

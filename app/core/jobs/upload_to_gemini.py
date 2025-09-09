@@ -14,11 +14,16 @@ def upload_files_to_gemini(game_id: str):
 
     try:
         # 1️⃣ List all files for the game
-        files = googleStorageService.list_files(game_id)
+        # files = googleStorageService.list_files(game_id)
+        files_meta = fileServices.list_files(game_id)
+        for meta in files_meta:
+            path_name = meta["filePath"]      # e.g. "game123/rules.txt"
+            file_name = path_name.split("/")[-1]
 
-        for file_name in files:
+        # for file_name in files:
             # 2️⃣ Read each file content
-            data = googleStorageService.read_file(f"{game_id}/{file_name}")
+            data = googleStorageService.read_file(path_name)
+            # data = googleStorageService.read_file(f"{game_id}/{file_name}")
 
             # 3️⃣ Upload to Gemini
             gemini_file = googleStorageService.genai_client.files.upload(
@@ -28,7 +33,7 @@ def upload_files_to_gemini(game_id: str):
                     display_name=file_name
                 ),
             )
-            file_doc = fileServices.collection.where("filePath", "==", f"{game_id}/{file_name}").limit(1).get()
+            file_doc = fileServices.collection.where("filePath", "==", path_name).limit(1).get()
             if not file_doc:
                 print(f"No metadata found for {file_name}, skipping...")
                 continue

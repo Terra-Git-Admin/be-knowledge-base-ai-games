@@ -22,15 +22,31 @@ class FileServices:
         self, file: FileMetaData, updatedBy: str, logs_service: LogServices
     ) -> Dict:
         doc_ref = self.collection.document(file.fileId)
+        existing = self.collection.where("filePath", "==", file.filePath).limit(1).stream()
+        if any(existing):
+            return {"error": "File already exists"}
         if doc_ref.get().exists:
             return {"error": "File already exists"}
         doc_ref.set(file.dict(exclude_none=True))
         log = Logs(fileId=file.fileId, updatedBy=updatedBy)
         logs_service.create_log(log)
         return {"message": "File created successfully"}
+    
+    def list_files_archive(self, isDeleted: bool ) -> List[Dict]:
+        print("🔥 Entered list_files_archive with isDeleted =", isDeleted, type(isDeleted))
+        query = self.collection.where("isDeleted", "==", isDeleted)
+        docs = query.stream()
+        docs_list = []
+        for doc in docs:
+            doc_data = doc.to_dict()
+            print(f"doc id: {doc.id}, data: {doc_data}")
+            docs_list.append(doc_data)
 
-    def list_files(self, gameName: str) -> List[FileMetaData]:
-        query = self.collection.where("gameName", "==", gameName)
+        print("total docs fetched:", len(docs_list))
+        return docs_list
+
+    def list_files(self, gameName: str ) -> List[FileMetaData]:
+        query = self.collection.where("gameName", "==", gameName).where("isDeleted", "==", False)
         docs = query.stream()
         return [doc.to_dict() for doc in docs]
 
@@ -73,6 +89,16 @@ class FileServices:
         logs_service.create_log(log)
         return {"message": "File updated successfully"}
     
+    def update_is_deleted(self, fileId: str, isDeleted: bool, updatedBy: str, logs_service: LogServices) -> Dict:
+        doc_ref = self.collection.document(fileId)
+        if not doc_ref.get().exists:
+            return {"error": "File not found"}
+        update_data = {"isDeleted": isDeleted, "lastUpdatedAt": datetime.utcnow()}
+        doc_ref.update(update_data)
+        log = Logs(fileId=fileId, updatedBy=updatedBy)
+        logs_service.create_log(log)
+        return {"message": "File updated successfully"}
+    
     def delete_dups(self):
         docs = self.collection.stream()
         grouped = defaultdict(list)
@@ -87,7 +113,6 @@ class FileServices:
             if len(items) > 1:
                 print(f"⚠️ Duplicate found for {file_path}, count={len(items)}")
 
-                # Sort by createdAt (keep the oldest, delete the rest)
                 items.sort(key=lambda x: x[1].get("createdAt"))
 
                 # First one = keeper
@@ -100,7 +125,14 @@ class FileServices:
                     print(f"🗑️ Deleted duplicate: {dup[0]} for {file_path}")
 
         print(f"✅ Finished. Deleted {deleted_count} duplicates.")
-
+    
+    def addField(self):
+        files_ref = self.collection.stream()
+        batch = self.db.batch()
+        for file in files_ref:
+            if "isDeleted" not in file.to_dict():
+                batch.update(file.reference, {"isDeleted": False})
+        batch.commit()
 
 
 
