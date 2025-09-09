@@ -1,5 +1,6 @@
 import os
 from google.cloud import storage
+from fastapi import HTTPException, status
 from typing import List
 from app.core.services.fileService import fileServices
 from app.core.services.logService import logServices
@@ -80,6 +81,15 @@ class GCSStorageService:
         except Exception as e:
             raise RuntimeError(e)
     def upload_file(self, file_path: str, file_content: str, updated_by: str) -> None:
+        existing = list(fileServices.collection.where("filePath", "==", file_path).limit(1).stream())
+        print("existing new", existing)
+        print("filePath", file_path)
+        if existing:
+            # return {"error": f"File with path {file_path} already exists"}
+            raise HTTPException(
+            status_code=400,
+            detail=f"File with path {file_path} already exists"
+            )
         try:
             blob = self.bucket.blob(file_path)
             blob.upload_from_string(file_content)
