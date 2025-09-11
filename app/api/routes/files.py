@@ -29,7 +29,7 @@ def get_file_content(path: str):
 async def upload_file(path: str = Form(...), file: UploadFile = File(...), username: str = Form(...)):
     try:
         content = await file.read()
-        googleStorageService.upload_file(path, content, updated_by=username)
+        googleStorageService.upload_file(path, content.decode("utf-8"), updated_by=username)
         return {"message": "File uploaded successfully"}
     except HTTPException as he:
         raise he
