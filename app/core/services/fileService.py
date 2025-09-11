@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI
 from google.cloud import firestore
 from app.core.schema.fileSchema import FileMetaData
@@ -88,16 +89,117 @@ class FileServices:
         log = Logs(fileId=fileId, updatedBy=updatedBy)
         logs_service.create_log(log)
         return {"message": "File updated successfully"}
-    
-    def update_is_deleted(self, fileId: str, isDeleted: bool, updatedBy: str, logs_service: LogServices) -> Dict:
+#     def update_is_deleted(
+#     self, fileId: str, isDeleted: bool, updatedBy: str, logs_service: LogServices
+# ) -> Dict:
+#         from app.core.storage import googleStorageService
+
+#         doc_ref = self.collection.document(fileId)
+#         doc_snapshot = doc_ref.get()
+
+#         if not doc_snapshot.exists:
+#             return {"error": "File not found"}
+
+#         existing_data = doc_snapshot.to_dict()
+#         current_name = existing_data.get("fileName", "")
+#         current_path = existing_data.get("filePath", "")
+
+#         # Decide new name
+#         if isDeleted:
+#             if not current_name.endswith("_archived"):
+#                 new_name = f"{current_name}_archived"
+#             else:
+#                 new_name = current_name
+#         else:
+#             if current_name.endswith("_archived"):
+#                 new_name = current_name[: -len("_archived")]
+#             else:
+#                 new_name = current_name  # already restored
+
+#         # Build new path (replace only the filename part)
+#         path_parts = current_path.split("/")
+#         path_parts[-1] = new_name
+#         new_path = "/".join(path_parts)
+
+#         # ✅ Only rename if path changed
+#         if new_path != current_path:
+#             googleStorageService.rename_file(
+#                 old_path=current_path,
+#                 new_path=new_path,
+#                 username=updatedBy
+#             )
+#         else:
+#             # just update Firestore (name/path already correct)
+#             self.collection.document(fileId).update({
+#                 "isDeleted": isDeleted,
+#                 "lastUpdatedAt": datetime.utcnow(),
+#                 "fileName": new_name,
+#                 "filePath": new_path,
+#             })
+
+#         # Add log
+#         log = Logs(fileId=fileId, updatedBy=updatedBy)
+#         logs_service.create_log(log)
+
+#         return {"message": f"File {'archived' if isDeleted else 'restored'} successfully"}
+
+    def update_is_deleted(
+    self, fileId: str, isDeleted: bool, updatedBy: str, logs_service: LogServices
+) -> Dict:
+        from app.core.storage import googleStorageService
+
         doc_ref = self.collection.document(fileId)
-        if not doc_ref.get().exists:
+        doc_snapshot = doc_ref.get()
+
+        if not doc_snapshot.exists:
             return {"error": "File not found"}
-        update_data = {"isDeleted": isDeleted, "lastUpdatedAt": datetime.utcnow()}
-        doc_ref.update(update_data)
+
+        existing_data = doc_snapshot.to_dict()
+        current_name = existing_data.get("fileName", "")
+        current_path = existing_data.get("filePath", "")
+
+        # 🔑 Split filename into name + extension
+        base, ext = os.path.splitext(current_name)
+
+        if isDeleted:
+            if not base.endswith("_archived"):
+                new_name = f"{base}_archived{ext}"
+            else:
+                new_name = current_name
+        else:
+            if base.endswith("_archived"):
+                new_name = f"{base[:-9]}{ext}"   # remove "_archived"
+            else:
+                new_name = current_name  # already restored
+
+        # Build new path
+        path_parts = current_path.split("/")
+        path_parts[-1] = new_name
+        new_path = "/".join(path_parts)
+
+        # ✅ Only rename if path changed
+        if new_path != current_path:
+            googleStorageService.rename_file(
+                old_path=current_path,
+                new_path=new_path,
+                username=updatedBy
+            )
+
+        # Always update Firestore
+        self.collection.document(fileId).update({
+            "isDeleted": isDeleted,
+            "lastUpdatedAt": datetime.utcnow(),
+            "fileName": new_name,
+            "filePath": new_path,
+        })
+
+        # Add log
         log = Logs(fileId=fileId, updatedBy=updatedBy)
         logs_service.create_log(log)
-        return {"message": "File updated successfully"}
+
+        return {"message": f"File {'archived' if isDeleted else 'restored'} successfully"}
+
+
     
     def delete_dups(self):
         docs = self.collection.stream()
