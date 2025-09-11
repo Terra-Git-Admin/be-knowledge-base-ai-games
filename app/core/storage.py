@@ -218,4 +218,4 @@ class GCSStorageService:
         except Exception as e:
             raise RuntimeError(e)
 
-googleStorageService = GCSStorageService("db")
+googleStorageService = GCSStorageService(db)
