@@ -217,5 +217,78 @@ class GCSStorageService:
             print(f"✅ Deleted {file_path} and its metadata/logs")
         except Exception as e:
             raise RuntimeError(e)
+    def rename_file(self, old_path: str, new_path: str, username: str) -> None:
+        try:
+            if not old_path or not new_path:
+                raise HTTPException(status_code=400, detail="old_path and new_path are required")
+            if old_path == new_path:
+                raise HTTPException(status_code=400, detail="old_path and new_path are identical")
+
+            # 1) Ensure Firestore has a doc for the old_path
+            old_docs = list(fileServices.collection.where("filePath", "==", old_path).limit(1).stream())
+            if not old_docs:
+                raise HTTPException(status_code=404, detail=f"Metadata not found in Firestore for {old_path}")
+
+            old_doc = old_docs[0]
+            file_id = old_doc.id
+            existing_data = old_doc.to_dict() or {}
+
+            # 2) Prevent conflicts in Firestore and Bucket
+            existing_new = list(fileServices.collection.where("filePath", "==", new_path).limit(1).stream())
+            if existing_new:
+                raise HTTPException(status_code=400, detail=f"File with path {new_path} already exists in Firestore")
+
+            dest_blob = self.bucket.blob(new_path)
+            if dest_blob.exists():
+                raise HTTPException(status_code=400, detail=f"Destination object {new_path} already exists in bucket")
+
+            src_blob = self.bucket.blob(old_path)
+            if not src_blob.exists():
+                raise HTTPException(status_code=404, detail=f"Source object not found: {old_path}")
+
+            # 3) Copy file in bucket
+            try:
+                self.bucket.copy_blob(src_blob, self.bucket, new_path)
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=f"Failed to copy object: {str(e)}")
+
+            # 4) Update Firestore metadata
+            try:
+                updated_metadata = FileMetaData(
+                    fileId=file_id,
+                    fileName=new_path.rsplit("/", 1)[-1],
+                    filePath=new_path,
+                    gameName=new_path.split("/", 1)[0],
+                    createdAt=existing_data.get("createdAt", datetime.utcnow()),
+                    lastUpdatedAt=datetime.utcnow(),
+                    raw_preview=existing_data.get("raw_preview", "") or "",
+                    geminiUploadTime=existing_data.get("geminiUploadTime"),
+                    geminiFileId=existing_data.get("geminiFileId"),
+                    isDeleted=existing_data.get("isDeleted", False)
+                )
+                fileServices.update_file(
+                    fileId=file_id,
+                    file=updated_metadata,
+                    updatedBy=username,
+                    logs_service=logServices
+                )
+            except Exception as e:
+                # rollback the bucket copy since Firestore update failed
+                try:
+                    dest_blob.delete()
+                except Exception as cleanup_err:
+                    print(f"⚠️ Rollback failed: {cleanup_err}")
+                raise HTTPException(status_code=500, detail=f"Failed to update Firestore metadata: {str(e)}")
+
+            # 5) If Firestore update succeeds → delete old blob
+            try:
+                src_blob.delete()
+            except Exception as e:
+                # non-fatal, but log it
+                print(f"⚠️ Warning: Failed to delete old blob {old_path}: {e}")
+
+        except Exception as e:
+            raise RuntimeError(e)
+
 
 googleStorageService = GCSStorageService(db)
