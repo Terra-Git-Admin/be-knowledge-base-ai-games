@@ -12,6 +12,7 @@ import io
 import requests
 import json
 from dotenv import load_dotenv
+from app.core.generalFunctions import generalFunction
 load_dotenv()
 
 GENAI_API_KEY = os.getenv("GENAI_API_KEY")
@@ -82,9 +83,7 @@ class GCSStorageService:
             return blob.download_as_text()
         except Exception as e:
             raise RuntimeError(e)
-    
-    
-    
+
     def upload_file(self, file_path: str, file_content: str, updated_by: str) -> None:
         """
         Uploads a file to Google Cloud Storage and the Gemini File API via a direct REST call.
@@ -103,27 +102,29 @@ class GCSStorageService:
             file_name = file_path.rsplit("/", 1)[-1]
             game_name = file_path.split("/", 1)[0]
 
+            gemini_file_id = generalFunction.gemini_upload(file_name=file_name, file_content=file_content)
+
             # 2. Prepare and execute the direct API call to Gemini (SDK replacement)
-            gemini_upload_url = f"https://generativelanguage.googleapis.com/upload/v1beta/files?key={self.gemini_api_key}"
+            # gemini_upload_url = f"https://generativelanguage.googleapis.com/upload/v1beta/files?key={self.gemini_api_key}"
         
-            metadata_payload = {"file": {"display_name": file_name}}
+            # metadata_payload = {"file": {"display_name": file_name}}
         
-            # Structure for multipart/form-data request
-            files_payload = {
-                'metadata': (None, json.dumps(metadata_payload), 'application/json'),
-                'file': (file_name, file_content, 'text/plain'), # (filename, file_data, content_type)
-            }
+            # # Structure for multipart/form-data request
+            # files_payload = {
+            #     'metadata': (None, json.dumps(metadata_payload), 'application/json'),
+            #     'file': (file_name, file_content, 'text/plain'), # (filename, file_data, content_type)
+            # }
 
-            print(f"✅ Calling Gemini REST API to upload '{file_name}'...")
-            response = requests.post(gemini_upload_url, files=files_payload)
+            # print(f"✅ Calling Gemini REST API to upload '{file_name}'...")
+            # response = requests.post(gemini_upload_url, files=files_payload)
         
-            # This will raise an error for 4xx/5xx responses, which is caught by the except block
-            response.raise_for_status() 
+            # # This will raise an error for 4xx/5xx responses, which is caught by the except block
+            # response.raise_for_status() 
         
-            response_data = response.json()
-            gemini_file_id = response_data['file']['name']
+            # response_data = response.json()
+            # gemini_file_id = response_data['file']['name']
 
-            print(f"✅ Successfully uploaded to Gemini. File ID: {gemini_file_id}")
+            # print(f"✅ Successfully uploaded to Gemini. File ID: {gemini_file_id}")
 
             # 3. Create metadata and save to Firestore (no change here)
             metaData = FileMetaData(
@@ -154,27 +155,24 @@ class GCSStorageService:
             print("🔥 An unexpected error occurred in upload_file:", e)
             traceback.print_exc()
             raise
-
-
-
-
     def update_file(self, file_path: str, content: str, updated_by: str) -> None:
         try:
             blob = self.bucket.blob(file_path)
             blob.upload_from_string(content, content_type="text/plain")
             file_name = file_path.rsplit("/", 1)[-1]
             game_name = file_path.split("/", 1)[0]
-            if isinstance(content, str):
-                data = content.encode("utf-8")
-            else:
-                data = content
-            gemini_file = self.genai_client.files.upload(
-            file=io.BytesIO(data),
-            config=types.UploadFileConfig(
-                mime_type="text/plain",
-                display_name=file_name
-            ),
-        )
+            gemini_file_id = generalFunction.gemini_upload(file_name=file_name, file_content=content)
+        #     if isinstance(content, str):
+        #         data = content.encode("utf-8")
+        #     else:
+        #         data = content
+        #     gemini_file = self.genai_client.files.upload(
+        #     file=io.BytesIO(data),
+        #     config=types.UploadFileConfig(
+        #         mime_type="text/plain",
+        #         display_name=file_name
+        #     ),
+        # )
             existing_docs = fileServices.collection.where("filePath", "==", file_path).stream()
             existing_doc = None
             for doc in existing_docs:
@@ -192,7 +190,8 @@ class GCSStorageService:
             createdAt=existing_data.get("createdAt"),
             lastUpdatedAt=datetime.utcnow(),
             geminiUploadTime=datetime.utcnow(),
-            geminiFileId=gemini_file.name,
+            geminiFileId=gemini_file_id,
+            # geminiFileId=gemini_file.name,
             raw_preview=content[:250],
             isDeleted= False
         )
