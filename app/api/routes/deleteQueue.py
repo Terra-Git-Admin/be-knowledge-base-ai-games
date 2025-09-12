@@ -37,6 +37,10 @@ def del_delete_request(requestId: str):
         "message": f"File {fileId} marked as deleted and delete request removed"
     }
 
+@deleteQueueRouter.delete("/deleteQueue/reject/{requestId}")
+def reject_del_request(requestId: str):
+    return deleteQueueServices.del_delete_request(requestId)
+
 @deleteQueueRouter.post("/deleteQueue/restore/{fileId}", response_model=dict)
 def restore_file(fileId: str, updatedBy: str = Query(...)):
     result = fileServices.update_is_deleted(

@@ -81,4 +81,4 @@ def upload_files_to_gemini(game_id: str):
             print(f"❌ Failed to update DB/logs for {file_name}: {e}")
     if failed_files:
         print(f"❌ Failed to upload files: {', '.join(failed_files)}")
-        # generalFunction.send_cron_failed_details_to_slack(failed_files, channel_id)
+        generalFunction.send_cron_failed_details_to_slack(failed_files, channel_id)

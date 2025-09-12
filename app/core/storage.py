@@ -104,28 +104,6 @@ class GCSStorageService:
 
             gemini_file_id = generalFunction.gemini_upload(file_name=file_name, file_content=file_content)
 
-            # 2. Prepare and execute the direct API call to Gemini (SDK replacement)
-            # gemini_upload_url = f"https://generativelanguage.googleapis.com/upload/v1beta/files?key={self.gemini_api_key}"
-        
-            # metadata_payload = {"file": {"display_name": file_name}}
-        
-            # # Structure for multipart/form-data request
-            # files_payload = {
-            #     'metadata': (None, json.dumps(metadata_payload), 'application/json'),
-            #     'file': (file_name, file_content, 'text/plain'), # (filename, file_data, content_type)
-            # }
-
-            # print(f"✅ Calling Gemini REST API to upload '{file_name}'...")
-            # response = requests.post(gemini_upload_url, files=files_payload)
-        
-            # # This will raise an error for 4xx/5xx responses, which is caught by the except block
-            # response.raise_for_status() 
-        
-            # response_data = response.json()
-            # gemini_file_id = response_data['file']['name']
-
-            # print(f"✅ Successfully uploaded to Gemini. File ID: {gemini_file_id}")
-
             # 3. Create metadata and save to Firestore (no change here)
             metaData = FileMetaData(
                 fileName=file_name,
@@ -162,17 +140,7 @@ class GCSStorageService:
             file_name = file_path.rsplit("/", 1)[-1]
             game_name = file_path.split("/", 1)[0]
             gemini_file_id = generalFunction.gemini_upload(file_name=file_name, file_content=content)
-        #     if isinstance(content, str):
-        #         data = content.encode("utf-8")
-        #     else:
-        #         data = content
-        #     gemini_file = self.genai_client.files.upload(
-        #     file=io.BytesIO(data),
-        #     config=types.UploadFileConfig(
-        #         mime_type="text/plain",
-        #         display_name=file_name
-        #     ),
-        # )
+
             existing_docs = fileServices.collection.where("filePath", "==", file_path).stream()
             existing_doc = None
             for doc in existing_docs:

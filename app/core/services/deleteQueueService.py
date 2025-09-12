@@ -27,7 +27,8 @@ class DeleteQueueServices:
     
     def del_delete_request(self, requestId: str):
         doc_ref = self.collection.document(requestId)
-        if not doc_ref.get().exists:
+        doc = doc_ref.get()
+        if not doc.exists:
             return {"error": "Delete request not found"}
         doc_ref.delete()
         return {
