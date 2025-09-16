@@ -63,3 +63,4 @@ async def auth_callback(request: Request):
         print(f"❌ Google OAuth failed: {e}")
         base_error_url = "http://localhost:8080/" if ENVIRONMENT == "dev" else"https://games-dash-v0.vercel.app/"
         return RedirectResponse(f"{base_error_url}unauthorized?error=oauth_failed")
+
