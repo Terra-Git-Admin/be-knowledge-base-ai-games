@@ -10,6 +10,7 @@ from app.api.routes.logs import logsRouter
 from app.api.routes.games import gameRouter
 from app.api.routes.auth import authRouter
 from app.api.routes.deleteQueue import deleteQueueRouter
+from app.api.routes.ether import etherRouter
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -38,6 +39,7 @@ app.include_router(logsRouter)
 app.include_router(gameRouter)
 app.include_router(authRouter)
 app.include_router(deleteQueueRouter)
+app.include_router(etherRouter)
 
 
 @app.on_event("startup")
