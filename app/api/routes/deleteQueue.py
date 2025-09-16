@@ -19,7 +19,7 @@ def create_delete_request(deleteQueue: DeleteQueue):
     return deleteQueueServices.create_delete_request(deleteQueue)
 
 
-@deleteQueueRouter.delete("/deleteQueue/{requestId}", response_model=dict)
+@deleteQueueRouter.delete("/deleteQueue/{requestId}")
 def del_delete_request(requestId: str):
     dq_doc = deleteQueueServices.collection.document(requestId).get()
     if not dq_doc.exists:

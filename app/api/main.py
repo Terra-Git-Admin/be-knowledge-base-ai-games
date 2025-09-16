@@ -1,6 +1,6 @@
+from fastapi.middleware.cors import CORSMiddleware
 import os
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 from app.core.storage import googleStorageService
 from starlette.middleware.sessions import SessionMiddleware
 from app.core.scheduler.geminiSchedular import start_scheduler, scheduler
