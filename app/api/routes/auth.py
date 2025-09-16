@@ -50,7 +50,7 @@ async def auth_callback(request: Request):
             user_id = existing_user.userId
         access_token = token["access_token"]
         print(f"✅ Google login successful: {user_info}")
-        base_url = "http://localhost:8080/" if ENVIRONMENT == "dev" else "https://terra-ai-games-dash.vercel.app/"
+        base_url = "http://localhost:8080/" if ENVIRONMENT == "dev" else "https://games-dash-v0.vercel.app/"
         redirect_url = (
             f"{base_url}login-success"
             f"?token={access_token}"
@@ -61,5 +61,5 @@ async def auth_callback(request: Request):
         return RedirectResponse(redirect_url)
     except RequestException  as e:
         print(f"❌ Google OAuth failed: {e}")
-        base_error_url = "http://localhost:8080/" if ENVIRONMENT == "dev" else"https://terra-ai-games-dash.vercel.app/"
+        base_error_url = "http://localhost:8080/" if ENVIRONMENT == "dev" else"https://games-dash-v0.vercel.app/"
         return RedirectResponse(f"{base_error_url}unauthorized?error=oauth_failed")
