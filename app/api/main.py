@@ -44,10 +44,7 @@ app.include_router(etherRouter)
 
 @app.on_event("startup")
 def on_startup():
-    games = googleStorageService.list_games()
-    for game in games:
-        # start_scheduler(game, test_mode=True)
-        start_scheduler(game, test_mode=False)
+    start_scheduler(test_mode=False)
 
 @app.on_event("shutdown")
 def on_shutdown():

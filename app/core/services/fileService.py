@@ -173,14 +173,22 @@ class FileServices:
                     print(f"🗑️ Deleted duplicate: {dup[0]} for {file_path}")
 
         print(f"✅ Finished. Deleted {deleted_count} duplicates.")
-    
-    def addField(self):
-        files_ref = self.collection.stream()
-        batch = self.db.batch()
-        for file in files_ref:
-            if "isDeleted" not in file.to_dict():
-                batch.update(file.reference, {"isDeleted": False})
-        batch.commit()
+    def seed_etherpad_field(self):
+        files = self.collection.stream()
+        for doc in files:
+            data = doc.to_dict()
+            if "etherpad" not in data:
+                try:
+                    doc.reference.update({
+                    "etherpad": {
+                        "lastSavedRevision": 0,
+                        "lastSavedAt": None,
+                        "unsaved": False
+                    }
+                })
+                    print(f"Seeded etherpad field for {doc.id}")
+                except Exception as e:
+                    print(f"Failed to seed etherpad field for {doc.id}: {e}")
 
 
 

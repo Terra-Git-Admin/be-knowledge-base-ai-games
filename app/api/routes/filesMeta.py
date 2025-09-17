@@ -9,7 +9,7 @@ filesMetaRouter = APIRouter(
 @filesMetaRouter.get("/meta/{gameName}")
 def list_meta(gameName: str):
     files = fileServices.list_files(gameName)
-    # fileServices.delete_dups()
+    # fileServices.seed_etherpad_field()
     print("meta data files", files)
     return files
 
