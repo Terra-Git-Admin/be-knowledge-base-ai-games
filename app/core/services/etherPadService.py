@@ -7,26 +7,39 @@ class EtherpadService:
 
     def openFileInEtherpad(self, pad_id: str, initialContent: str = ""):
         try:
-            create_url = f"{self.BASE_URL}/createPad"
-            create_res = requests.get(create_url, params={"apikey": self.API_KEY, "padID": pad_id}, timeout=20)
-            create_data = create_res.json()
-            set_url = f"{self.BASE_URL}/setText"
-            set_res = requests.post(
-                set_url,
-                params={
-                    "apikey":self.API_KEY,
-                    "padID": pad_id
-                },
-                data = {
-                    "text": initialContent
-                },
-                timeout=20
-            )
-            set_data = set_res.json()
-            return {
-                "create": create_data,
-                "setText": set_data
-            }
+            get_url = f"{self.BASE_URL}/getText"
+            get_res = requests.get(get_url, params={
+                "apikey": self.API_KEY,
+                "padID": pad_id
+            },
+            timeout=20)
+            get_data = get_res.json()
+            if get_data.get("code") == 0:
+                return {
+                    "exists": True,
+                    "text": get_data["data"]["text"]
+                }
+            else:
+                create_url = f"{self.BASE_URL}/createPad"
+                create_res = requests.get(create_url, params={"apikey": self.API_KEY, "padID": pad_id}, timeout=20)
+                create_data = create_res.json()
+                set_url = f"{self.BASE_URL}/setText"
+                set_res = requests.post(
+                    set_url,
+                    params={
+                        "apikey":self.API_KEY,
+                        "padID": pad_id
+                    },
+                    data = {
+                        "text": initialContent
+                    },
+                    timeout=20
+                )
+                set_data = set_res.json()
+                return {
+                    "create": create_data,
+                    "setText": set_data
+                }
         except Exception as e:
             return {"error" : str(e)}
     
