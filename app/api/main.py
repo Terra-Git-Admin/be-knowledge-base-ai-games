@@ -44,6 +44,7 @@ app.include_router(etherRouter)
 
 @app.on_event("startup")
 def on_startup():
+    # start_scheduler(test_mode=True)
     start_scheduler(test_mode=False)
 
 @app.on_event("shutdown")

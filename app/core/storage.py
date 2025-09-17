@@ -4,7 +4,7 @@ from fastapi import HTTPException, status
 from typing import List
 from app.core.services.fileService import fileServices
 from app.core.services.logService import logServices
-from app.core.schema.fileSchema import FileMetaData
+from app.core.schema.fileSchema import FileMetaData, EtherPadState
 from datetime import datetime
 from google import genai
 from google.genai import types
@@ -114,7 +114,8 @@ class GCSStorageService:
                 raw_preview=file_content[:250],
                 geminiUploadTime=datetime.utcnow(),
                 geminiFileId=gemini_file_id, # Use the ID from the API response
-                isDeleted=False
+                isDeleted=False,
+                etherpad=EtherPadState()
             )
 
             result = fileServices.create_file(
@@ -159,9 +160,9 @@ class GCSStorageService:
             lastUpdatedAt=datetime.utcnow(),
             geminiUploadTime=datetime.utcnow(),
             geminiFileId=gemini_file_id,
-            # geminiFileId=gemini_file.name,
             raw_preview=content[:250],
-            isDeleted= False
+            isDeleted= False,
+            etherpad=EtherPadState()
         )
             result = fileServices.update_file(
             fileId=file_id,
@@ -231,7 +232,8 @@ class GCSStorageService:
                     raw_preview=existing_data.get("raw_preview", "") or "",
                     geminiUploadTime=existing_data.get("geminiUploadTime"),
                     geminiFileId=existing_data.get("geminiFileId"),
-                    isDeleted=existing_data.get("isDeleted", False)
+                    isDeleted=existing_data.get("isDeleted", False),
+                    etherpad=EtherPadState()
                 )
                 fileServices.update_file(
                     fileId=file_id,

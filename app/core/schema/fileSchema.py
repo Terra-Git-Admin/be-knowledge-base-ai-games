@@ -5,7 +5,7 @@ from typing import Optional
 
 class EtherPadState(BaseModel):
     lastSavedRevision: int = 0
-    lastSavedAt: Optional[datetime]
+    lastSavedAt: Optional[datetime] = None
     unsaved: bool = False
 
 
@@ -20,4 +20,4 @@ class FileMetaData(BaseModel):
     geminiUploadTime: Optional[datetime] = None
     geminiFileId: Optional[str] = None
     isDeleted: bool = False
-    etherpad: EtherPadState = Field(default_factory=EtherPadState)
+    etherpad: Optional[EtherPadState] = Field(default_factory=EtherPadState)

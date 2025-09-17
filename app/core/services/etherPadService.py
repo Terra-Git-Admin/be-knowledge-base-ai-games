@@ -17,23 +17,23 @@ class EtherpadService:
             if get_data.get("code") == 0:
                 text = get_data["data"]["text"]
                 if not text.strip() or "Welcome to Etherpad!" in text:
-                #     set_url = f"{self.BASE_URL}/setText"
-                #     set_res = requests.post(
-                #         set_url,
-                #         params={"apikey": self.API_KEY, "padID": pad_id},
-                #         data={"text": initialContent},
-                #         timeout=20
-                #     )
-                #     return {"setText": set_res.json()}
-                # return {
-                #     "exists": True,
-                #     "text": get_data["data"]["text"]
-                # }
-                    raise ValueError("Default Etherpad text detected! Cannot proceed with empty or default content.")
+                    set_url = f"{self.BASE_URL}/setText"
+                    set_res = requests.post(
+                        set_url,
+                        params={"apikey": self.API_KEY, "padID": pad_id},
+                        data={"text": initialContent},
+                        timeout=20
+                    )
+                    return {"setText": set_res.json()}
                 return {
                     "exists": True,
-                    "text": text
+                    "text": get_data["data"]["text"]
                 }
+                #     raise ValueError("Default Etherpad text detected! Cannot proceed with empty or default content.")
+                # return {
+                #     "exists": True,
+                #     "text": text
+                # }
             else:
                 create_url = f"{self.BASE_URL}/createPad"
                 create_res = requests.get(create_url, params={"apikey": self.API_KEY, "padID": pad_id}, timeout=20)

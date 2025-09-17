@@ -16,7 +16,7 @@ def start_scheduler( test_mode: bool = False):
         scheduler.add_job(
             get_all_games_for_gemini,
             trigger="interval",
-            seconds=5 * 60,
+            seconds=30,
             id=f"gemini_upload_job_successful",
             replace_existing=True,
             max_instances=1
