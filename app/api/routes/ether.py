@@ -44,6 +44,11 @@ def get_ether_pad_revision(req: GetRevisionRequest):
     print("result from etherpad", results)
     return {"revisions": results}
 
+
+@etherRouter.get("/ether/revision/{pad_id}")
+def get_revision_count(pad_id: str):
+    return etherpadService.getRevisionCount(pad_id)
+
 @etherRouter.post("/ether/set")
 def set_ether_pad_router(req: SetPadRequest):
     return etherpadService.setPadText(pad_id=req.pad_id, content=req.content)

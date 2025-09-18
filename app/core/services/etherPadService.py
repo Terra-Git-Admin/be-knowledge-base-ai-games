@@ -74,23 +74,14 @@ class EtherpadService:
                 "padID": pad_id
             }, timeout=10).json()
 
-            # saved revisions
-            url_saved = f"{self.BASE_URL}/getSavedRevisionsCount"
-            res_saved = requests.get(url_saved, params={
-                "apikey": self.API_KEY,
-                "padID": pad_id
-            }, timeout=10).json()
-
-            if res_total.get("code") == 0 and res_saved.get("code") == 0:
+            if res_total.get("code") == 0:
                 total = res_total["data"]["revisions"]
-                saved = res_saved["data"]["savedRevisions"]
-
                 return {
                     "padID": pad_id,
                     "etherpad": {
                         "lastSavedRevision": total,
-                        "lastSavedAt": None,  # you could later store timestamp if needed
-                        "unsaved": total > saved
+                        "lastSavedAt": None,
+                        "unsaved": False
                     }
                 }
             elif res_total.get("code") == 1:
@@ -111,6 +102,7 @@ class EtherpadService:
 
         except Exception as e:
             return {"padID": pad_id, "error": str(e)}
+<<<<<<< HEAD
     
     def setPadText(self, pad_id: str, content: str):
         try:
@@ -125,6 +117,8 @@ class EtherpadService:
         except Exception as e:
             return {"error" : str(e)}
 
+=======
+>>>>>>> ffef924dd3b2b0c2b89d9d0b80fd9ae6f02d0660
 
 
 etherpadService = EtherpadService()
