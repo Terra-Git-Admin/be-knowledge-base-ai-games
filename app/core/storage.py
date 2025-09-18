@@ -113,7 +113,7 @@ class GCSStorageService:
                 lastUpdatedAt=datetime.utcnow(),
                 raw_preview=file_content[:250],
                 geminiUploadTime=datetime.utcnow(),
-                geminiFileId=gemini_file_id, # Use the ID from the API response
+                geminiFileId=gemini_file_id,
                 isDeleted=False,
                 etherpad=EtherPadState()
             )
@@ -134,7 +134,7 @@ class GCSStorageService:
             print("🔥 An unexpected error occurred in upload_file:", e)
             traceback.print_exc()
             raise
-    def update_file(self, file_path: str, content: str, updated_by: str) -> None:
+    def update_file(self, file_path: str, content: str, updated_by: str, lastSavedRevision: int) -> None:
         try:
             blob = self.bucket.blob(file_path)
             blob.upload_from_string(content, content_type="text/plain")
@@ -162,7 +162,11 @@ class GCSStorageService:
             geminiFileId=gemini_file_id,
             raw_preview=content[:250],
             isDeleted= False,
-            etherpad=EtherPadState()
+            etherpad=EtherPadState(
+                lastSavedRevision=lastSavedRevision,
+                lastSavedAt=datetime.utcnow(),
+                unsaved=False
+            )
         )
             result = fileServices.update_file(
             fileId=file_id,
@@ -222,6 +226,7 @@ class GCSStorageService:
 
             # 4) Update Firestore metadata
             try:
+                existing_etherpad = existing_data.get("etherpad", {})
                 updated_metadata = FileMetaData(
                     fileId=file_id,
                     fileName=new_path.rsplit("/", 1)[-1],
@@ -233,7 +238,10 @@ class GCSStorageService:
                     geminiUploadTime=existing_data.get("geminiUploadTime"),
                     geminiFileId=existing_data.get("geminiFileId"),
                     isDeleted=existing_data.get("isDeleted", False),
-                    etherpad=EtherPadState()
+                    etherpad=EtherPadState(
+                        lastSavedRevision=existing_etherpad.get("lastSavedRevision", 0),lastSavedAt=existing_etherpad.get("lastSavedAt"),
+                        unsaved=existing_etherpad.get("unsaved", False),
+                    )
                 )
                 fileServices.update_file(
                     fileId=file_id,
