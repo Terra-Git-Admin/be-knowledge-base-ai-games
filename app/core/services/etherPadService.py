@@ -29,11 +29,6 @@ class EtherpadService:
                     "exists": True,
                     "text": get_data["data"]["text"]
                 }
-                #     raise ValueError("Default Etherpad text detected! Cannot proceed with empty or default content.")
-                # return {
-                #     "exists": True,
-                #     "text": text
-                # }
             else:
                 create_url = f"{self.BASE_URL}/createPad"
                 create_res = requests.get(create_url, params={"apikey": self.API_KEY, "padID": pad_id}, timeout=20)
@@ -116,49 +111,20 @@ class EtherpadService:
 
         except Exception as e:
             return {"padID": pad_id, "error": str(e)}
-
     
-    # def getRevisionCount(self, pad_id: str) -> dict:
-    #     try:
-    #         url_saved = f"{self.BASE_URL}/getSavedRevisionsCount"
-    #         res_saved = requests.get(url_saved, params={
-    #             "apikey": self.API_KEY,
-    #             "padID": pad_id
-    #         },
-    #         timeout=10)
-    #         data_saved = res_saved.json()
-    #         if res_total.get("code") == 0 and :
-    #         url = f"{self.BASE_URL}/getRevisionsCount"
-    #         res = requests.get(url, params={
-    #             "apikey": self.API_KEY,
-    #             "padID": pad_id
-    #         }, timeout=10)
-    #         data = res.json()
-    #         if data.get("code") == 0:
-    #             return {
-    #                 "padID": pad_id,
-    #                 "etherpad": {
-    #                     "lastSavedRevision": data["data"]["revisions"],
-    #                     "lastSavedAt": None,
-    #                     "unsaved": False
-    #                 }
-    #             }
-    #         elif data.get("code") == 1:
-    #             return {
-    #                 "padID": pad_id,
-    #                 "etherpad": {
-    #                     "lastSavedRevision": 0,
-    #                     "lastSavedAt": None,
-    #                     "unsaved": False
-    #                 }
-    #             }
-    #         else:
-    #             return {
-    #                 "padID": pad_id,
-    #                 "error": data.get("message", "Unknown error")
-    #             }
-    #     except Exception as e:
-    #         return {"error" : str(e)}
+    def setPadText(self, pad_id: str, content: str):
+        try:
+            set_url = f"{self.BASE_URL}/setText"
+            set_res = requests.post(
+                set_url,
+                params={"apikey": self.API_KEY, "padID": pad_id},
+                data={"text": content},
+                timeout=20
+            )
+            return set_res.json()
+        except Exception as e:
+            return {"error" : str(e)}
+
 
 
 etherpadService = EtherpadService()
