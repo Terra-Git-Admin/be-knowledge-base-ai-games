@@ -37,8 +37,8 @@ async def upload_file(path: str = Form(...), file: UploadFile = File(...), usern
         return {"error": str(e)}
 
 @fileRouter.put("/update")
-def update_file(path: str, content: str = Body(..., embed=True), username: str = Body(..., embed=True)):
-    googleStorageService.update_file(path, content, updated_by=username)
+def update_file(path: str, content: str = Body(..., embed=True), username: str = Body(..., embed=True), lastSavedRevision: int = Body(..., embed=True)):
+    googleStorageService.update_file(path, content, updated_by=username, lastSavedRevision=lastSavedRevision)
     return {"message": "File updated successfully"}
 
 @fileRouter.delete("/delete")
