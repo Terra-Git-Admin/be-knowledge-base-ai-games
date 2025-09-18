@@ -69,5 +69,39 @@ class EtherpadService:
             return create_data.get("data", {}).get("text", "")
         except Exception as e:
             return {"error" : str(e)}
+    
+    def getRevisionCount(self, pad_id: str) -> dict:
+        try:
+            url = f"{self.BASE_URL}/getRevisionCount"
+            res = requests.get(url, params={
+                "apikey": self.API_KEY,
+                "padID": pad_id
+            }, timeout=10)
+            data = res.json()
+            if data.get("code") == 0:
+                return {
+                    "padID": pad_id,
+                    "etherpad": {
+                        "lastSavedRevision": data["data"]["revisions"],
+                        "lastSavedAt": None,
+                        "unsaved": False
+                    }
+                }
+            elif data.get("code") == 1:
+                return {
+                    "padID": pad_id,
+                    "etherpad": {
+                        "lastSavedRevision": 0,
+                        "lastSavedAt": None,
+                        "unsaved": False
+                    }
+                }
+            else:
+                return {
+                    "padID": pad_id,
+                    "error": data.get("message", "Unknown error")
+                }
+        except Exception as e:
+            return {"error" : str(e)}
 
 etherpadService = EtherpadService()
