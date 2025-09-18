@@ -29,11 +29,6 @@ class EtherpadService:
                     "exists": True,
                     "text": get_data["data"]["text"]
                 }
-                #     raise ValueError("Default Etherpad text detected! Cannot proceed with empty or default content.")
-                # return {
-                #     "exists": True,
-                #     "text": text
-                # }
             else:
                 create_url = f"{self.BASE_URL}/createPad"
                 create_res = requests.get(create_url, params={"apikey": self.API_KEY, "padID": pad_id}, timeout=20)
@@ -107,6 +102,19 @@ class EtherpadService:
 
         except Exception as e:
             return {"padID": pad_id, "error": str(e)}
+    def setPadText(self, pad_id: str, content: str):
+        try:
+            set_url = f"{self.BASE_URL}/setText"
+            set_res = requests.post(
+                set_url,
+                params={"apikey": self.API_KEY, "padID": pad_id},
+                data={"text": content},
+                timeout=20
+            )
+            return set_res.json()
+        except Exception as e:
+            return {"error" : str(e)}
+
 
 
 etherpadService = EtherpadService()
