@@ -102,8 +102,6 @@ class EtherpadService:
 
         except Exception as e:
             return {"padID": pad_id, "error": str(e)}
-<<<<<<< HEAD
-    
     def setPadText(self, pad_id: str, content: str):
         try:
             set_url = f"{self.BASE_URL}/setText"
@@ -116,9 +114,6 @@ class EtherpadService:
             return set_res.json()
         except Exception as e:
             return {"error" : str(e)}
-
-=======
->>>>>>> ffef924dd3b2b0c2b89d9d0b80fd9ae6f02d0660
 
 
 
