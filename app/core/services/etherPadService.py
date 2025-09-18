@@ -79,23 +79,14 @@ class EtherpadService:
                 "padID": pad_id
             }, timeout=10).json()
 
-            # saved revisions
-            url_saved = f"{self.BASE_URL}/getSavedRevisionsCount"
-            res_saved = requests.get(url_saved, params={
-                "apikey": self.API_KEY,
-                "padID": pad_id
-            }, timeout=10).json()
-
-            if res_total.get("code") == 0 and res_saved.get("code") == 0:
+            if res_total.get("code") == 0:
                 total = res_total["data"]["revisions"]
-                saved = res_saved["data"]["savedRevisions"]
-
                 return {
                     "padID": pad_id,
                     "etherpad": {
                         "lastSavedRevision": total,
-                        "lastSavedAt": None,  # you could later store timestamp if needed
-                        "unsaved": total > saved
+                        "lastSavedAt": None,
+                        "unsaved": False
                     }
                 }
             elif res_total.get("code") == 1:
@@ -116,49 +107,6 @@ class EtherpadService:
 
         except Exception as e:
             return {"padID": pad_id, "error": str(e)}
-
-    
-    # def getRevisionCount(self, pad_id: str) -> dict:
-    #     try:
-    #         url_saved = f"{self.BASE_URL}/getSavedRevisionsCount"
-    #         res_saved = requests.get(url_saved, params={
-    #             "apikey": self.API_KEY,
-    #             "padID": pad_id
-    #         },
-    #         timeout=10)
-    #         data_saved = res_saved.json()
-    #         if res_total.get("code") == 0 and :
-    #         url = f"{self.BASE_URL}/getRevisionsCount"
-    #         res = requests.get(url, params={
-    #             "apikey": self.API_KEY,
-    #             "padID": pad_id
-    #         }, timeout=10)
-    #         data = res.json()
-    #         if data.get("code") == 0:
-    #             return {
-    #                 "padID": pad_id,
-    #                 "etherpad": {
-    #                     "lastSavedRevision": data["data"]["revisions"],
-    #                     "lastSavedAt": None,
-    #                     "unsaved": False
-    #                 }
-    #             }
-    #         elif data.get("code") == 1:
-    #             return {
-    #                 "padID": pad_id,
-    #                 "etherpad": {
-    #                     "lastSavedRevision": 0,
-    #                     "lastSavedAt": None,
-    #                     "unsaved": False
-    #                 }
-    #             }
-    #         else:
-    #             return {
-    #                 "padID": pad_id,
-    #                 "error": data.get("message", "Unknown error")
-    #             }
-    #     except Exception as e:
-    #         return {"error" : str(e)}
 
 
 etherpadService = EtherpadService()
