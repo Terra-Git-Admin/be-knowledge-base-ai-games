@@ -31,13 +31,15 @@ def create_ether_pad(req: CreatePadRequest):
 def get_ether_pad(pad_id: str):
     return etherpadService.getPadContent(pad_id)
 
-@etherRouter.get("/ether/revisions", response_model=GetRevisionResponse)
+@etherRouter.post("/ether/revisions")
 def get_ether_pad_revision(req: GetRevisionRequest):
     results = []
     for pad_id in req.pad_ids:
         data = etherpadService.getRevisionCount(pad_id)
-        results.append({
-             "padId": pad_id,
-            "revisionCount": data.get("revisionCount", 0) if "revisionCount" in data else 0
-        })
+        # results.append({
+        #      "padId": pad_id,
+        #     "revisionCount": data.get("revisionCount", 0) if "revisionCount" in data else 0
+        # })
+        results.append(data)
+    print("result from etherpad", results)
     return {"revisions": results}
