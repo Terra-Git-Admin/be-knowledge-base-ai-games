@@ -13,6 +13,7 @@ fileRouter = APIRouter(
     tags=["Files"]
 )
 
+
 @fileRouter.get("/", response_model=List[str])
 def list_files(game_id: str = ""):
     files = googleStorageService.list_files(game_id)
