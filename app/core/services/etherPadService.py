@@ -1,6 +1,12 @@
 import requests
+from app.core.schema.fileSchema import FileMetaData
+from app.core.services.fileService import fileServices
+from datetime import datetime
+from app.core.services.logService import logServices
+from app.core.schema.logsSchema import Logs
 class EtherpadService:
     API_KEY = "6fccb695d3eadd1c7ce830f0eb82399f7fac17551f77e8df0ecda93fc6561f5d"
+    # BASE_URL = "http://0.0.0.0:9001/api/1.2.15"
     BASE_URL = "https://etherpad-437522952831.asia-south1.run.app/api/1.2.15"
     def __init__(self):
         pass
@@ -102,7 +108,7 @@ class EtherpadService:
 
         except Exception as e:
             return {"padID": pad_id, "error": str(e)}
-    def setPadText(self, pad_id: str, content: str):
+    def setPadText(self, pad_id: str, content: str, file: FileMetaData, updatedBy: str):
         try:
             set_url = f"{self.BASE_URL}/setText"
             set_res = requests.post(
@@ -111,6 +117,19 @@ class EtherpadService:
                 data={"text": content},
                 timeout=20
             )
+            rev_info = self.getRevisionCount(pad_id)
+            latest_rev = rev_info["etherpad"]["lastSavedRevision"]
+            update_data = {
+            "etherpad.lastSavedRevision": latest_rev,
+            "etherpad.lastSavedAt": datetime.utcnow(),
+            "etherpad.unsaved": False,
+            "lastUpdatedAt": datetime.utcnow()
+        }
+            fileServices.collection.document(file.fileId).update(update_data)
+
+            # still log the update
+            log = Logs(fileId=file.fileId, updatedBy=updatedBy)
+            logServices.create_log(log)
             return set_res.json()
         except Exception as e:
             return {"error" : str(e)}
