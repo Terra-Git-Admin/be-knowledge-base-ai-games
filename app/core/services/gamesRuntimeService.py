@@ -31,34 +31,18 @@ class GamesRuntimeService:
         except Exception as e:
             raise Exception(f"Error fetching games from games-runtime collection: {str(e)}")
 
-    def get_game_by_id(self, game_id: str) -> Dict[str, Any]:
-        """
-        Retrieve a specific game by its document ID
-        """
-        try:
-            doc = self.collection.document(game_id).get()
-            if doc.exists:
-                game_data = doc.to_dict()
-                game_data['id'] = doc.id
-                return game_data
-            else:
-                return None
-        except Exception as e:
-            raise Exception(f"Error fetching game with ID {game_id}: {str(e)}")
-
     def create_game(self, game_name: str) -> Dict[str, Any]:
         """
-        Create a new game in the games-runtime collection
+        Create a new game in the games-runtime collection using gameName as document ID
         """
         try:
             game_data = {
                 'gameName': game_name,
-                'createdAt': datetime.utcnow(),
-                'updatedAt': datetime.utcnow()
             }
             
-            doc_ref = self.collection.add(game_data)
-            game_data['id'] = doc_ref[1].id
+            # Use gameName as the document ID
+            self.collection.document(game_name).set(game_data)
+            game_data['id'] = game_name
             
             return game_data
         except Exception as e:

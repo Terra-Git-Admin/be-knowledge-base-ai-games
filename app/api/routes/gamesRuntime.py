@@ -19,22 +19,7 @@ def get_all_runtime_games():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@gamesRuntimeRouter.get("/{game_id}", response_model=GameRuntimeResponse)
-def get_runtime_game_by_id(game_id: str):
-    """
-    Get a specific game from the games-runtime collection by ID
-    """
-    try:
-        game = games_runtime_service.get_game_by_id(game_id)
-        if game is None:
-            raise HTTPException(status_code=404, detail="Game not found")
-        return game
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@gamesRuntimeRouter.post("/create", response_model=GameRuntimeResponse)
+@gamesRuntimeRouter.post("/", response_model=GameRuntimeResponse)
 def create_runtime_game(request: CreateGameRequest):
     """
     Create a new game in the games-runtime collection

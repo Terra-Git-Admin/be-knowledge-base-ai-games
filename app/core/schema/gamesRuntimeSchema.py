@@ -6,8 +6,6 @@ from datetime import datetime
 class GameRuntime(BaseModel):
     id: Optional[str] = None
     gameName: str
-    createdAt: Optional[datetime] = None
-    updatedAt: Optional[datetime] = None
 
     class Config:
         from_attributes = True
@@ -20,8 +18,6 @@ class CreateGameRequest(BaseModel):
 class GameRuntimeResponse(BaseModel):
     id: str
     gameName: str
-    createdAt: Optional[datetime] = None
-    updatedAt: Optional[datetime] = None
 
     class Config:
         from_attributes = True
