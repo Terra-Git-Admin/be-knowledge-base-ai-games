@@ -21,7 +21,7 @@ class CreateSystemPromptRequest(BaseModel):
     knowledgeBase: List[str]
     dynamics: List[DynamicField]
     outputFilename: str
-    instructions: str
+    instructions: Optional[str] = None
 
 class UpdateSystemPromptRequest(BaseModel):
     systemPromptFileId: Optional[str] = None
