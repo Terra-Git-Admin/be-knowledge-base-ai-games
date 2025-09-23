@@ -1,12 +1,15 @@
 from fastapi import APIRouter, HTTPException
 from app.core.services.gamesRuntimeService import games_runtime_service
 from app.core.schema.gamesRuntimeSchema import GameRuntimeResponse, CreateGameRequest
+from app.api.routes.systemPrompts import systemPromptsRouter
 from typing import List
 
 gamesRuntimeRouter = APIRouter(
     prefix="/games-runtime",
     tags=["Games Runtime"]
 )
+
+gamesRuntimeRouter.include_router(systemPromptsRouter)
 
 @gamesRuntimeRouter.get("/", response_model=List[GameRuntimeResponse])
 def get_all_runtime_games():
