@@ -56,4 +56,6 @@ def get_revision_count(pad_id: str):
 def set_ether_pad_router(req: SetPadRequest):
     return etherpadService.setPadText(pad_id=req.pad_id, content=req.content, file= req.file, updatedBy=req.updatedBy)
 
-
+@etherRouter.get("/ether/lastEdited/{pad_id}")
+def get_last_edited(pad_id: str):
+    return etherpadService.getLastEdited(pad_id)

@@ -6,7 +6,7 @@ from app.core.services.logService import logServices
 from app.core.schema.logsSchema import Logs
 class EtherpadService:
     API_KEY = "6fccb695d3eadd1c7ce830f0eb82399f7fac17551f77e8df0ecda93fc6561f5d"
-    # BASE_URL = "http://0.0.0.0:9001/api/1.2.15"
+    # BASE_URL = "http://127.0.0.1:9001/api/1.2.15"
     BASE_URL = "https://etherpad-437522952831.asia-south1.run.app/api/1.2.15"
     def __init__(self):
         pass
@@ -131,6 +131,32 @@ class EtherpadService:
             log = Logs(fileId=file.fileId, updatedBy=updatedBy)
             logServices.create_log(log)
             return set_res.json()
+        except Exception as e:
+            return {"error" : str(e)}
+    
+    def getLastEdited(self, pad_id: str) -> dict:
+        try:
+            url = f"{self.BASE_URL}/getLastEdited"
+            res = requests.get(
+                url,
+                params={
+                    "apikey": self.API_KEY,
+                    "padID": pad_id
+                },
+                timeout=10
+            ).json()
+            if res.get("code") == 0:
+                ts = res["data"]["lastEdited"]
+                last_edited = datetime.utcfromtimestamp(ts / 1000.0)
+                return {
+                    "padID": pad_id,
+                    "lastEdited": last_edited.isoformat() + "z"
+                }
+            else:
+                return {
+                    "padID": pad_id,
+                    "error": res.get("message", "Unknown error")
+                }
         except Exception as e:
             return {"error" : str(e)}
 
