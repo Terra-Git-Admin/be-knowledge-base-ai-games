@@ -6,8 +6,8 @@ from app.core.services.logService import logServices
 from app.core.schema.logsSchema import Logs
 class EtherpadService:
     API_KEY = "6fccb695d3eadd1c7ce830f0eb82399f7fac17551f77e8df0ecda93fc6561f5d"
-    # BASE_URL = "http://127.0.0.1:9001/api/1.2.15"
-    BASE_URL = "https://etherpad-437522952831.asia-south1.run.app/api/1.2.15"
+    BASE_URL = "http://127.0.0.1:9001/api/1.2.15"
+    # BASE_URL = "https://etherpad-437522952831.asia-south1.run.app/api/1.2.15"
     def __init__(self):
         pass
 
@@ -93,13 +93,34 @@ class EtherpadService:
             elif res_total.get("code") == 1:
                 # pad not found
                 return {
-                    "padID": pad_id,
-                    "etherpad": {
-                        "lastSavedRevision": 0,
-                        "lastSavedAt": None,
-                        "unsaved": False
+                        "padID": pad_id,
+                        "etherpad": {
+                            "lastSavedRevision": 0,
+                            "lastSavedAt": None,
+                            "unsaved": False
+                        }
                     }
-                }
+                # doc_ref = fileServices.collection.document(pad_id)
+                # doc = doc_ref.get()
+                # if not doc.exists:
+                #     return {
+                #         "padID": pad_id,
+                #         "etherpad": {
+                #             "lastSavedRevision": 0,
+                #             "lastSavedAt": None,
+                #             "unsaved": False
+                #         }
+                #     }
+                # else:
+                #     etherpad_data = doc.get("etherpad") or {}
+                #     return {
+                #         "padID": pad_id,
+                #         "etherpad": {
+                #             "lastSavedRevision": etherpad_data.get("lastSavedRevision", 0),
+                #             "lastSavedAt": etherpad_data.get("lastSavedAt"),
+                #             "unsaved": etherpad_data.get("unsaved", False)
+                #         }
+                #     }
             else:
                 return {
                     "padID": pad_id,
