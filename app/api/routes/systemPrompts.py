@@ -42,3 +42,23 @@ def update_system_prompt(gameName: str, promptId: str, request: UpdateSystemProm
         return prompt
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@systemPromptsRouter.get("/prompt/{promptId}")
+def get_system_prompt(gameName: str, promptId: str):
+    """
+    Get a specific system prompt for a specific game
+    """
+    try:
+        return system_prompts_service.get_system_prompt(gameName, promptId)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@systemPromptsRouter.delete("/prompt/delete/{promptId}")
+def delete_system_prompt(gameName: str, promptId: str):
+    """
+    Delete a specific system prompt for a specific game
+    """
+    try:
+        return system_prompts_service.delete_system_prompt(gameName, promptId)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

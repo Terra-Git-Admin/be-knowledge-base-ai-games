@@ -30,6 +30,23 @@ class SystemPromptsService:
             return system_prompts
         except Exception as e:
             raise Exception(f"Error fetching system prompts: {str(e)}")
+    
+    def get_system_prompt(self, game_name: str, prompt_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Retrieve a specific system prompt for a specific game
+        """
+        try:
+            doc_ref = self.db.collection(self.COLLECTION_NAME).document(game_name).collection(self.SUBCOLLECTION_NAME).document(prompt_id)
+            doc = doc_ref.get()
+            if doc.exists:
+                prompt_data = doc.to_dict()
+                print("testing prompt data",prompt_data)
+                prompt_data['id'] = doc.id
+                return prompt_data
+            else:
+                return None
+        except Exception as e:
+            raise Exception(f"Error fetching system prompt: {str(e)}")
 
     def create_system_prompt(self, game_name: str, prompt_data: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -70,6 +87,14 @@ class SystemPromptsService:
                 raise Exception("System prompt not found")
         except Exception as e:
             raise Exception(f"Error updating system prompt: {str(e)}")
+    
+    def delete_system_prompt(self, game_name: str, prompt_id: str) -> Dict[str, Any]:
+        try:
+            doc_ref = self.db.collection(self.COLLECTION_NAME).document(game_name).collection(self.SUBCOLLECTION_NAME).document(prompt_id)
+            doc_ref.delete()
+            return {"success": True}
+        except Exception as e:
+            raise Exception(f"Error deleting system prompt: {str(e)}")              
 
 
 # Create a singleton instance

@@ -13,6 +13,8 @@ from app.api.routes.auth import authRouter
 from app.api.routes.deleteQueue import deleteQueueRouter
 from app.api.routes.ether import etherRouter
 from app.api.routes.npc import npcRouter
+from app.api.routes.chatState import chatStateRouter
+from app.api.routes.presetState import presetRouter
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -44,6 +46,8 @@ app.include_router(authRouter)
 app.include_router(deleteQueueRouter)
 app.include_router(etherRouter)
 app.include_router(npcRouter)
+app.include_router(chatStateRouter)
+app.include_router(presetRouter)
 
 
 @app.on_event("startup")
