@@ -11,7 +11,7 @@ class VoiceServices:
         self.collection = self.db.collection(self.COLLECTION_NAME)
     def create_voice(self, voice: VoiceModel):
         self.collection.document(voice.voiceId).set(voice.model_dump())
-        return voice
+        return voice.model_dump() 
     
     def list_voices(self):
         docs = self.collection.get()
