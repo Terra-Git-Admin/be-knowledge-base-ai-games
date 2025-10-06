@@ -63,3 +63,11 @@ def rename_file(request: RenameRequest):
         raise he
     except Exception as e:
         return {"error": str(e)}
+
+@fileRouter.post("/search/{gameName}")
+def search_file_content(gameName: str, search_query: str = Body(..., embed=True)):
+    try:
+        matching_files = googleStorageService.search_file_content(search_query, gameName)
+        return matching_files
+    except Exception as e:
+        return {"error": str(e)}

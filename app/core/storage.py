@@ -267,5 +267,20 @@ class GCSStorageService:
         except Exception as e:
             raise RuntimeError(e)
 
+    def search_file_content(self, search_query: str, game_id: str) -> List[str]:
+        files = self.list_files(game_id)
+        matching_files = []
+        print("🔍 Searching for:", search_query)
+        print("🔍 Files to search:", files)
+        for file in files:
+            try:
+                content = self.read_file(f"{game_id}/{file}")
+                if search_query.lower() in content.lower():
+                    print(f"✅ Found match in {file}")
+                    print(f"✅ Content: {content}")
+                    matching_files.append(f"{game_id}/{file}")
+            except Exception as e:
+                print(f"Failed to search file content: {e}")
+        return matching_files
 
 googleStorageService = GCSStorageService(db)
