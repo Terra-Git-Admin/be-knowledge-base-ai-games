@@ -13,6 +13,8 @@ import requests
 import json
 from dotenv import load_dotenv
 from app.core.generalFunctions import generalFunction
+import re
+
 load_dotenv()
 
 GENAI_API_KEY = os.getenv("GENAI_API_KEY")
@@ -275,7 +277,9 @@ class GCSStorageService:
         for file in files:
             try:
                 content = self.read_file(f"{game_id}/{file}")
-                if search_query.lower() in content.lower():
+                pattern = re.compile(re.escape(search_query), re.IGNORECASE)
+                if pattern.search(content):
+                # if search_query.lower() in content.lower():
                     print(f"✅ Found match in {file}")
                     print(f"✅ Content: {content}")
                     matching_files.append(f"{game_id}/{file}")
