@@ -1,5 +1,5 @@
 import os
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, status
 from google.cloud import firestore
 from app.core.schema.fileSchema import FileMetaData
 from app.core.services.logService import LogServices
@@ -24,10 +24,12 @@ class FileServices:
     ) -> Dict:
         doc_ref = self.collection.document(file.fileId)
         existing = self.collection.where("filePath", "==", file.filePath).limit(1).stream()
-        if any(existing):
-            return {"error": "File already exists"}
-        if doc_ref.get().exists:
-            return {"error": "File already exists"}
+        if any(existing) or doc_ref.get().exists:
+            # return {"error": "File already exists"}
+            raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="File already exists"
+        )
         doc_ref.set(file.dict(exclude_none=True))
         log = Logs(fileId=file.fileId, updatedBy=updatedBy)
         logs_service.create_log(log)
