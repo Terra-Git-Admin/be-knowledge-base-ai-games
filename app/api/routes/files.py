@@ -27,10 +27,10 @@ def get_file_content(path: str):
     return {"filename": path, "content": content}
 
 @fileRouter.post("/upload")
-async def upload_file(path: str = Form(...), file: UploadFile = File(...), username: str = Form(...)):
+async def upload_file(path: str = Form(...), file: UploadFile = File(...), username: str = Form(...), fileId: str = Form(None)):
     try:
         content = await file.read()
-        googleStorageService.upload_file(path, content.decode("utf-8"), updated_by=username)
+        googleStorageService.upload_file(file_path = path, file_content = content.decode("utf-8"), updated_by=username, file_id=fileId)
         return {"message": "File uploaded successfully"}
     except HTTPException as he:
         raise he

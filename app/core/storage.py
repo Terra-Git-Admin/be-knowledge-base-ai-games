@@ -1,7 +1,7 @@
 import os
 from google.cloud import storage
 from fastapi import HTTPException, status
-from typing import List
+from typing import List, Optional
 from app.core.services.fileService import fileServices
 from app.core.services.logService import logServices
 from app.core.schema.fileSchema import FileMetaData, EtherPadState
@@ -86,7 +86,7 @@ class GCSStorageService:
         except Exception as e:
             raise RuntimeError(e)
 
-    def upload_file(self, file_path: str, file_content: str, updated_by: str) -> None:
+    def upload_file(self, file_path: str, file_content: str, updated_by: str, file_id: Optional[str] = None) -> None:
         """
         Uploads a file to Google Cloud Storage and the Gemini File API via a direct REST call.
         """
@@ -107,19 +107,35 @@ class GCSStorageService:
             gemini_file_id = generalFunction.gemini_upload(file_name=file_name, file_content=file_content)
 
             # 3. Create metadata and save to Firestore (no change here)
-            metaData = FileMetaData(
-                fileName=file_name,
-                filePath=file_path,
-                gameName=game_name,
-                createdAt=datetime.utcnow(),
-                lastUpdatedAt=datetime.utcnow(),
-                raw_preview=file_content[:250],
-                geminiUploadTime=datetime.utcnow(),
-                geminiFileId=gemini_file_id,
-                isDeleted=False,
-                etherpad=EtherPadState()
-            )
+            # metaData = FileMetaData(
+            #     fileId=file_id,
+            #     fileName=file_name,
+            #     filePath=file_path,
+            #     gameName=game_name,
+            #     createdAt=datetime.utcnow(),
+            #     lastUpdatedAt=datetime.utcnow(),
+            #     raw_preview=file_content[:250],
+            #     geminiUploadTime=datetime.utcnow(),
+            #     geminiFileId=gemini_file_id,
+            #     isDeleted=False,
+            #     etherpad=EtherPadState()
+            # )
+            meta_kwargs = dict(
+            fileName=file_name,
+            filePath=file_path,
+            gameName=game_name,
+            createdAt=datetime.utcnow(),
+            lastUpdatedAt=datetime.utcnow(),
+            raw_preview=file_content[:250],
+            geminiUploadTime=datetime.utcnow(),
+            geminiFileId=gemini_file_id,
+            isDeleted=False,
+            etherpad=EtherPadState()
+        )
+            if file_id:
+                meta_kwargs["fileId"] = file_id
 
+            metaData = FileMetaData(**meta_kwargs)
             result = fileServices.create_file(
                 file=metaData, updatedBy=updated_by, logs_service=logServices
             )
