@@ -3,6 +3,7 @@ import requests
 from zoneinfo import ZoneInfo
 from datetime import datetime
 import json
+import base64
 import os
 from dotenv import load_dotenv
 
@@ -65,50 +66,37 @@ class GeneralFunctions:
         gemini_file_id = response_data['file']['name']
         print(f"✅ Successfully uploaded to Gemini. File ID: {gemini_file_id}")
         return gemini_file_id
+    
+    def gemini_image_upload(self, image_name: str, image_source: str, is_base64: bool = True):
+        gemini_upload_url = f"https://generativelanguage.googleapis.com/upload/v1beta/files?key={self.gemini_api_key}"
+        print(f"✅ Calling Gemini REST API to upload '{self.gemini_api_key}'...")
+        content_type = "image/png"
+        if image_name.lower().endswith(".jpg") or image_name.lower().endswith(".jpeg"):
+            content_type = "image/jpeg"
+        elif image_name.lower().endswith(".webp"):
+            content_type = "image/webp"
+        if is_base64:
+            # Strip header if it exists: data:image/png;base64,XXXXX
+            base64_data = image_source.split(",")[-1]
+            image_bytes = base64.b64decode(base64_data)
+        else:
+            with open(image_source, "rb") as f:
+                image_bytes = f.read()
+        metadata_payload = {"file": {"display_name": image_name}}
+        files_payload = {
+        'metadata': (None, json.dumps(metadata_payload), 'application/json'),
+        'file': (image_name, image_bytes, content_type),
+    }
+
+        print(f"📤 Uploading image '{image_name}' to Gemini...")
+        response = requests.post(gemini_upload_url, files=files_payload, timeout=30)
+        response.raise_for_status()
+
+        data = response.json()
+        gemini_file_id = data["file"]["name"]
+
+        print(f"✅ Uploaded successfully to Gemini. File ID: {gemini_file_id}")
+        return gemini_file_id
 
 
 generalFunction = GeneralFunctions()
-
-# def seed_files_metadata(
-#     gcs_service: GCSStorageService,
-#     file_service,
-#     logs_service,
-#     preview_length: int = 200
-# ):
-#     """
-#     Iterate through all files in GCS and populate Firestore metadata.
-#     """
-#     files = gcs_service.list_files("")  # no prefix = all files
-#     print(f"📂 Found {len(files)} files in GCS")
-
-#     for file_path in files:
-#         try:
-#             # Split path into gameName and fileName
-#             # parts = file_path.split("/", 1)
-#             file_name = file_path.rsplit("/", 1)[-1]
-#             # if len(parts) == 1:
-#             #     game_name, file_name = "default", parts[0]
-#             # else:
-#             #     game_name, file_name = parts[0], parts[1]
-
-#             # ✅ Get file content
-#             content = gcs_service.read_file(file_path)
-
-#             # ✅ Raw preview (first 200 chars)
-#             preview = content[:preview_length]
-
-#             # ✅ Create metadata
-#             metadata = FileMetaData(
-#                 fileName=file_name,
-#                 gameName="school-game",
-#                 createdAt=datetime.utcnow(),
-#                 lastUpdatedAt=datetime.utcnow(),
-#                 raw_preview=preview,
-#             )
-
-#             # ✅ Insert into Firestore (skip if exists)
-#             result = file_service.create_file(metadata, updatedBy="system_seed", logs_service=logs_service)
-#             print(f"✅ {file_path} → {result}")
-
-#         except Exception as e:
-#             print(f"❌ Failed {file_path}: {e}")

@@ -37,6 +37,23 @@ async def upload_file(path: str = Form(...), file: UploadFile = File(...), usern
     except Exception as e:
         return {"error": str(e)}
 
+@fileRouter.post("/upload-image")
+async def upload_image(image_name: str = Form(...), file_path: str = Form(...), game_name: str = Form(...), file: UploadFile = File(...)):
+    try:
+        content = await file.read()
+        googleStorageService.upload_image(
+            image_name=image_name,
+            file_path=file_path,
+            image_source=content,
+            game_name=game_name,
+            is_base64=False
+        )
+        return {"message": "File uploaded successfully"}
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        return {"error": str(e)}
+
 @fileRouter.put("/update")
 def update_file(path: str, content: str = Body(..., embed=True), username: str = Body(..., embed=True), lastSavedRevision: int = Body(..., embed=True)):
     googleStorageService.update_file(path, content, updated_by=username, lastSavedRevision=lastSavedRevision)

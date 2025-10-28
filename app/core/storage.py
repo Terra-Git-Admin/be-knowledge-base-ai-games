@@ -2,10 +2,11 @@ import os
 from google.cloud import storage
 from fastapi import HTTPException, status
 from typing import List, Optional
+import base64
 from app.core.services.fileService import fileServices
 from app.core.services.logService import logServices
 from app.core.schema.fileSchema import FileMetaData, EtherPadState
-from datetime import datetime
+from datetime import datetime, timedelta
 from google import genai
 from google.genai import types
 import io
@@ -106,20 +107,6 @@ class GCSStorageService:
 
             gemini_file_id = generalFunction.gemini_upload(file_name=file_name, file_content=file_content)
 
-            # 3. Create metadata and save to Firestore (no change here)
-            # metaData = FileMetaData(
-            #     fileId=file_id,
-            #     fileName=file_name,
-            #     filePath=file_path,
-            #     gameName=game_name,
-            #     createdAt=datetime.utcnow(),
-            #     lastUpdatedAt=datetime.utcnow(),
-            #     raw_preview=file_content[:250],
-            #     geminiUploadTime=datetime.utcnow(),
-            #     geminiFileId=gemini_file_id,
-            #     isDeleted=False,
-            #     etherpad=EtherPadState()
-            # )
             meta_kwargs = dict(
             fileName=file_name,
             filePath=file_path,
@@ -152,6 +139,55 @@ class GCSStorageService:
             print("🔥 An unexpected error occurred in upload_file:", e)
             traceback.print_exc()
             raise
+    
+    def generate_signed_url(self, file_path: str, expiration_days: int = 7):
+        blob = self.bucket.blob(file_path)
+        return blob.generate_signed_url(
+            version="v4",
+            expiration=timedelta(days=expiration_days),
+            method="GET",
+        )
+    def upload_image(self, image_name: str, file_path: str, image_source: bytes, game_name: str, is_base64: bool = True,):
+        existing = list(fileServices.collection.where("filePath", "==", file_path).limit(1).stream())
+        if existing:
+            raise HTTPException(
+                status_code=400,
+                detail=f"File with path {file_path} already exists"
+            )
+        try:
+            if is_base64:
+                if "," in image_source:
+                    image_source = image_source.split(",", 1)[1]
+                image_bytes = base64.b64decode(image_source)
+            else:
+                image_bytes = image_source
+            blob = self.bucket.blob(file_path)
+            blob.upload_from_string(image_bytes, content_type="image/png")
+            # public_url = f"https://storage.googleapis.com/{self.bucket.name}/{file_path}"
+            signed_url = self.generate_signed_url(file_path, expiration_days=7)
+            print(f"✅ Uploaded image to GCS: {signed_url}")
+            image_base64 = base64.b64encode(image_bytes).decode("utf-8")
+            gemini_file_id = generalFunction.gemini_image_upload(image_name, image_base64, is_base64=True)
+            print(f"✅ Gemini upload complete: {gemini_file_id}")
+            now = datetime.utcnow()
+            file_metadata = FileMetaData(
+            fileName=image_name,
+            filePath=file_path,
+            gameName=game_name,
+            createdAt=now,
+            lastUpdatedAt=now,
+            raw_preview=None,
+            geminiUploadTime=now,
+            geminiFileId=gemini_file_id,
+            publicUrl=signed_url,
+            isDeleted=False,
+        )
+            file_doc = file_metadata.dict()
+            fileServices.collection.document(file_metadata.fileId).set(file_doc)
+            print(f"✅ Saved metadata to Firestore for {file_metadata.fileId}")
+            return {"status": "success", "fileId": file_metadata.fileId, "signed_url": signed_url, "geminiFileId": gemini_file_id}
+        except Exception as e:
+            raise RuntimeError(e)
     def update_file(self, file_path: str, content: str, updated_by: str, lastSavedRevision: int) -> None:
         try:
             blob = self.bucket.blob(file_path)

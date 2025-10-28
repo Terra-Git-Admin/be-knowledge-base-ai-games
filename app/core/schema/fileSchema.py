@@ -16,8 +16,9 @@ class FileMetaData(BaseModel):
     gameName: str
     createdAt: datetime
     lastUpdatedAt: datetime
-    raw_preview: str
+    raw_preview: Optional[str] = None
     geminiUploadTime: Optional[datetime] = None
     geminiFileId: Optional[str] = None
+    publicUrl: Optional[str] = None 
     isDeleted: bool = False
     etherpad: Optional[EtherPadState] = Field(default_factory=EtherPadState)
