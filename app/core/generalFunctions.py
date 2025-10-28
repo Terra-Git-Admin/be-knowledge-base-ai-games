@@ -75,6 +75,9 @@ class GeneralFunctions:
             content_type = "image/jpeg"
         elif image_name.lower().endswith(".webp"):
             content_type = "image/webp"
+        elif image_name.lower().endswith(".pdf"):
+            content_type = "application/pdf"
+
         if is_base64:
             # Strip header if it exists: data:image/png;base64,XXXXX
             base64_data = image_source.split(",")[-1]

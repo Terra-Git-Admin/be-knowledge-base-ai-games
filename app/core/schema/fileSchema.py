@@ -19,6 +19,6 @@ class FileMetaData(BaseModel):
     raw_preview: Optional[str] = None
     geminiUploadTime: Optional[datetime] = None
     geminiFileId: Optional[str] = None
-    publicUrl: Optional[str] = None 
+    publicUrl: Optional[str] = None
     isDeleted: bool = False
     etherpad: Optional[EtherPadState] = Field(default_factory=EtherPadState)
