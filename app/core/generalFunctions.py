@@ -79,7 +79,6 @@ class GeneralFunctions:
             content_type = "application/pdf"
 
         if is_base64:
-            # Strip header if it exists: data:image/png;base64,XXXXX
             base64_data = image_source.split(",")[-1]
             image_bytes = base64.b64decode(base64_data)
         else:
