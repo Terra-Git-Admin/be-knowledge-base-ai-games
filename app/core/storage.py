@@ -163,8 +163,8 @@ class GCSStorageService:
                 image_bytes = image_source
             blob = self.bucket.blob(file_path)
             blob.upload_from_string(image_bytes, content_type="image/png")
-            # public_url = f"https://storage.googleapis.com/{self.bucket.name}/{file_path}"
-            signed_url = self.generate_signed_url(file_path, expiration_days=7)
+            signed_url = f"https://storage.googleapis.com/{self.bucket.name}/{file_path}"
+            # signed_url = self.generate_signed_url(file_path, expiration_days=7)
             print(f"✅ Uploaded image to GCS: {signed_url}")
             image_base64 = base64.b64encode(image_bytes).decode("utf-8")
             gemini_file_id = generalFunction.gemini_image_upload(image_name, image_base64, is_base64=True)
