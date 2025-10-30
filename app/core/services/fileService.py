@@ -14,7 +14,6 @@ db = firestore.Client(project="aigameschat", database="school-game")
 
 class FileServices:
     COLLECTION_NAME = "files"
-
     def __init__(self, db_client: firestore.Client):
         self.db = db_client
         self.collection = self.db.collection(self.COLLECTION_NAME)
@@ -175,22 +174,36 @@ class FileServices:
                     print(f"🗑️ Deleted duplicate: {dup[0]} for {file_path}")
 
         print(f"✅ Finished. Deleted {deleted_count} duplicates.")
-    def seed_etherpad_field(self):
+
+    def get_file_type(self, file_name: str) -> str:
+        """Infer file type based on file extension."""
+        ext = file_name.lower().split(".")[-1]
+        if ext in {"txt", "md"}:
+            return "text"
+        elif ext in {"png", "jpg", "jpeg", "gif", "bmp", "svg"}:
+            return "image"
+        elif ext in {"mp3", "wav", "ogg"}:
+            return "audio"
+        elif ext in {"mp4", "mov", "avi", "mkv", "webm"}:
+            return "video"
+        elif ext in {"pdf", "doc", "docx", "ppt", "pptx", "xls", "xlsx"}:
+            return "document"
+        else:
+            return "unknown"
+    def seed_filetype_field(self):
         files = self.collection.stream()
+        updated_count = 0
         for doc in files:
             data = doc.to_dict()
-            if "etherpad" not in data:
-                try:
-                    doc.reference.update({
-                    "etherpad": {
-                        "lastSavedRevision": 0,
-                        "lastSavedAt": None,
-                        "unsaved": False
-                    }
-                })
-                    print(f"Seeded etherpad field for {doc.id}")
-                except Exception as e:
-                    print(f"Failed to seed etherpad field for {doc.id}: {e}")
+            file_name = data.get("fileName")
+            current_type = data.get("fileType")
+            if not file_name or current_type:
+                continue
+            new_type = self.get_file_type(file_name)
+            self.collection.document(doc.id).update({"fileType": new_type, "lastUpdatedAt": datetime.utcnow()})
+            updated_count += 1
+            print(f"✅ Updated {file_name} → {new_type}")
+        print(f"\n🎯 Done. Total updated documents: {updated_count}")
 
 
 

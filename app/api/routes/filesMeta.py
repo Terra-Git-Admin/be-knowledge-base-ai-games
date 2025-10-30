@@ -38,6 +38,7 @@ def list_meta(gameName: str):
     files = fileServices.list_files(gameName)
     print("meta data files from meta List", files)
     # seed_missing_etherpad_metadata()
+    # fileServices.seed_filetype_field()
     return files
 
 @filesMetaRouter.get("/meta/archive/")

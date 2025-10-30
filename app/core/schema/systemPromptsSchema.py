@@ -8,6 +8,7 @@ class DynamicField(BaseModel):
 
 class SystemPromptResponse(BaseModel):
     id: str
+    title: str
     systemPromptFileId: str
     knowledgeBase: List[str]
     dynamics: List[DynamicField]
@@ -17,6 +18,7 @@ class SystemPromptResponse(BaseModel):
     updatedAt: datetime
 
 class CreateSystemPromptRequest(BaseModel):
+    title: str
     systemPromptFileId: str
     knowledgeBase: List[str]
     dynamics: List[DynamicField]
@@ -24,6 +26,7 @@ class CreateSystemPromptRequest(BaseModel):
     instructions: Optional[str] = None
 
 class UpdateSystemPromptRequest(BaseModel):
+    title: Optional[str] = None
     systemPromptFileId: Optional[str] = None
     knowledgeBase: Optional[List[str]] = None
     dynamics: Optional[List[DynamicField]] = None

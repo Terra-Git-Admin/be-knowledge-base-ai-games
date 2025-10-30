@@ -2,6 +2,8 @@ from fastapi import APIRouter, File, Form, UploadFile, Body, HTTPException
 from typing import List
 from app.core.storage import googleStorageService
 from pydantic import BaseModel
+from fastapi.responses import JSONResponse
+import base64
 
 class RenameRequest(BaseModel):
     old_path: str
@@ -22,9 +24,15 @@ def list_files(game_id: str = ""):
 
 @fileRouter.get("/content")
 def get_file_content(path: str):
-    print("path for test", path)
     content = googleStorageService.read_file(path)
-    return {"filename": path, "content": content}
+    if path.endswith((".txt", ".json", ".csv", ".md", ".py", ".xml", ".yml", ".yaml")):
+        return {"filename": path, "content": content}
+    elif path.endswith((".pdf", ".png", ".jpg", ".jpeg", ".gif")):
+        encoded = base64.b64encode(content).decode("utf-8")
+        return JSONResponse(content={"filename": path, "content": encoded})
+    else:
+        encoded = base64.b64encode(content).decode("utf-8")
+        return JSONResponse(content={"filename": path, "content": encoded})
 
 @fileRouter.post("/upload")
 async def upload_file(path: str = Form(...), file: UploadFile = File(...), username: str = Form(...), fileId: str = Form(None)):

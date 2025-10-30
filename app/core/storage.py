@@ -79,11 +79,14 @@ class GCSStorageService:
         except Exception as e:
             raise RuntimeError(e)
 
-    def read_file(self, file_path: str) -> str:
+    def read_file(self, file_path: str):
         try:
             print("filename from read file", file_path);
             blob = self.bucket.blob(file_path)
-            return blob.download_as_text()
+            # return blob.download_as_text()
+            if file_path.endswith((".txt", ".json", ".csv", ".md", ".py", ".xml", ".yml", ".yaml")):
+                return blob.download_as_text()
+            return blob.download_as_bytes()
         except Exception as e:
             raise RuntimeError(e)
 
@@ -106,6 +109,7 @@ class GCSStorageService:
             game_name = file_path.split("/", 1)[0]
 
             gemini_file_id = generalFunction.gemini_upload(file_name=file_name, file_content=file_content)
+            file_type = fileServices.get_file_type(file_name)
 
             meta_kwargs = dict(
             fileName=file_name,
@@ -116,6 +120,7 @@ class GCSStorageService:
             raw_preview=file_content[:250],
             geminiUploadTime=datetime.utcnow(),
             geminiFileId=gemini_file_id,
+            fileType=file_type,
             isDeleted=False,
             etherpad=EtherPadState()
         )
@@ -139,15 +144,7 @@ class GCSStorageService:
             print("🔥 An unexpected error occurred in upload_file:", e)
             traceback.print_exc()
             raise
-    
-    def generate_signed_url(self, file_path: str, expiration_days: int = 7):
-        blob = self.bucket.blob(file_path)
-        return blob.generate_signed_url(
-            version="v4",
-            expiration=timedelta(days=expiration_days),
-            method="GET",
-        )
-    def upload_image(self, image_name: str, file_path: str, image_source: bytes, game_name: str, is_base64: bool = True,):
+    def upload_image(self, image_name: str, file_path: str, image_source: bytes, game_name: str, is_base64: bool = True):
         existing = list(fileServices.collection.where("filePath", "==", file_path).limit(1).stream())
         if existing:
             raise HTTPException(
@@ -162,10 +159,8 @@ class GCSStorageService:
             else:
                 image_bytes = image_source
             blob = self.bucket.blob(file_path)
+            file_type = fileServices.get_file_type(image_name)
             blob.upload_from_string(image_bytes, content_type="image/png")
-            signed_url = f"https://storage.googleapis.com/{self.bucket.name}/{file_path}"
-            # signed_url = self.generate_signed_url(file_path, expiration_days=7)
-            print(f"✅ Uploaded image to GCS: {signed_url}")
             image_base64 = base64.b64encode(image_bytes).decode("utf-8")
             gemini_file_id = generalFunction.gemini_image_upload(image_name, image_base64, is_base64=True)
             print(f"✅ Gemini upload complete: {gemini_file_id}")
@@ -175,17 +170,17 @@ class GCSStorageService:
             filePath=file_path,
             gameName=game_name,
             createdAt=now,
+            fileType=file_type,
             lastUpdatedAt=now,
             raw_preview=None,
             geminiUploadTime=now,
             geminiFileId=gemini_file_id,
-            publicUrl=signed_url,
             isDeleted=False,
         )
             file_doc = file_metadata.dict()
             fileServices.collection.document(file_metadata.fileId).set(file_doc)
             print(f"✅ Saved metadata to Firestore for {file_metadata.fileId}")
-            return {"status": "success", "fileId": file_metadata.fileId, "signed_url": signed_url, "geminiFileId": gemini_file_id}
+            return {"status": "success", "fileId": file_metadata.fileId, "geminiFileId": gemini_file_id}
         except Exception as e:
             raise RuntimeError(e)
     def update_file(self, file_path: str, content: str, updated_by: str, lastSavedRevision: int) -> None:
@@ -214,6 +209,7 @@ class GCSStorageService:
             lastUpdatedAt=datetime.utcnow(),
             geminiUploadTime=datetime.utcnow(),
             geminiFileId=gemini_file_id,
+            fileType=existing_data.get("fileType"),
             raw_preview=content[:250],
             isDeleted= False,
             etherpad=EtherPadState(
@@ -291,6 +287,7 @@ class GCSStorageService:
                     raw_preview=existing_data.get("raw_preview", "") or "",
                     geminiUploadTime=existing_data.get("geminiUploadTime"),
                     geminiFileId=existing_data.get("geminiFileId"),
+                    fileType=existing_data.get("fileType"),
                     isDeleted=existing_data.get("isDeleted", False),
                     etherpad=EtherPadState(
                         lastSavedRevision=existing_etherpad.get("lastSavedRevision", 0),lastSavedAt=existing_etherpad.get("lastSavedAt"),

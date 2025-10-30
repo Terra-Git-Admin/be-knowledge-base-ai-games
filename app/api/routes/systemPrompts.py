@@ -53,6 +53,19 @@ def get_system_prompt(gameName: str, promptId: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@systemPromptsRouter.get("/prompt/data/{prompt_name}")
+def get_system_prompt_by_name(gameName: str, prompt_name: str):
+    """
+    Get a specific system prompt for a specific game
+    """
+    try:
+        print(f"Querying title == '{prompt_name}'")
+        return system_prompts_service.get_system_prompt_by_name(gameName, prompt_name)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+
 @systemPromptsRouter.delete("/prompt/delete/{promptId}")
 def delete_system_prompt(gameName: str, promptId: str):
     """

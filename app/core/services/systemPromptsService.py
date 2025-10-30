@@ -47,6 +47,21 @@ class SystemPromptsService:
                 return None
         except Exception as e:
             raise Exception(f"Error fetching system prompt: {str(e)}")
+    
+    def get_system_prompt_by_name(self, game_name: str, prompt_name: str) -> Optional[Dict[str, Any]]:
+        """
+        Retrieve a specific system prompt for a specific game
+        """
+        try:
+            subcollection_ref = self.db.collection(self.COLLECTION_NAME).document(game_name).collection(self.SUBCOLLECTION_NAME)
+            docs = subcollection_ref.where('title', '==', prompt_name).stream()
+            for doc in docs:
+                prompt_data = doc.to_dict()
+                prompt_data['id'] = doc.id
+                return prompt_data
+            return None
+        except Exception as e:
+            raise Exception(f"Error fetching system prompt: {str(e)}")
 
     def create_system_prompt(self, game_name: str, prompt_data: Dict[str, Any]) -> Dict[str, Any]:
         """
