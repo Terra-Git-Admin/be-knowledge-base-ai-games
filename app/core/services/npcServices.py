@@ -17,8 +17,30 @@ class NpcServices:
             "message": "Npc created successfully"
         }
 
-    def list_npcs(self) -> List[NpcModel]:
-        doc_ref = self.collection.get()
+    def list_npcs(self, gameName: str) -> List[NpcModel]:
+        doc_ref = self.collection.where("gameName", "==", gameName).stream()
         return [doc.to_dict() for doc in doc_ref]
+    
+    def get_npc(self, npcId: str) -> dict:
+        doc_ref = self.collection.document(npcId).get()
+        if not doc_ref.exists:
+            return {"error": "NPC not found"}
+        return doc_ref.to_dict()
+    
+    def update_npc(self, npcId: str, npc: NpcModel):
+        doc_ref = self.collection.document(npcId)
+        doc_ref.update(npc.dict(exclude_none=True))
+        return {
+            "message": "Npc updated successfully"
+        }
+
+    def delete_npc(self, npcId: str):
+        doc_ref = self.collection.document(npcId)
+        if not doc_ref.get().exists:
+            return {"error": "Npc not found"}
+        doc_ref.delete()
+        return {
+            "message": "Npc deleted successfully"
+        }
 
 npcServices = NpcServices(db)
