@@ -178,7 +178,7 @@ class FileServices:
     def get_file_type(self, file_name: str) -> str:
         """Infer file type based on file extension."""
         ext = file_name.lower().split(".")[-1]
-        if ext in {"txt", "md"}:
+        if ext in {"txt", "md", "json"}:
             return "text"
         elif ext in {"png", "jpg", "jpeg", "gif", "bmp", "svg"}:
             return "image"
