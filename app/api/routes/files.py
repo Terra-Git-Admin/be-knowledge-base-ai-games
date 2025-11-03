@@ -38,7 +38,27 @@ def get_file_content(path: str):
 async def upload_file(path: str = Form(...), file: UploadFile = File(...), username: str = Form(...), fileId: str = Form(None)):
     try:
         content = await file.read()
-        googleStorageService.upload_file(file_path = path, file_content = content.decode("utf-8"), updated_by=username, file_id=fileId)
+        file_extension = file.filename.split(".")[-1].lower()
+        # googleStorageService.upload_file(file_path = path, file_content = content.decode("utf-8"), updated_by=username, file_id=fileId)
+        file_name = path.rsplit("/", 1)[-1]
+        game_name = path.split("/", 1)[0]
+        if file_extension in ["txt", "md", "json", "csv"]:
+            decoded_content = content.decode("utf-8")
+            googleStorageService.upload_file(
+                file_path=path,
+                file_content=decoded_content,
+                updated_by=username,
+                file_id=fileId,
+            )
+        # For PDFs or binary files, send raw bytes
+        else:
+            googleStorageService.upload_image(
+                image_name=file_name,
+                file_path=path,
+                image_source=content,
+                game_name=game_name,
+                is_base64=False
+            )
         return {"message": "File uploaded successfully"}
     except HTTPException as he:
         raise he

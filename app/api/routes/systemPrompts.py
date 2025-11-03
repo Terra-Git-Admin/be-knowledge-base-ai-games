@@ -1,14 +1,14 @@
 from fastapi import APIRouter, HTTPException
 from app.core.services.systemPromptsService import system_prompts_service
-from app.core.schema.systemPromptsSchema import SystemPromptResponse, CreateSystemPromptRequest, UpdateSystemPromptRequest
-from typing import List
+from app.core.schema.systemPromptsSchema import CreateSystemPromptRequest, UpdateSystemPromptRequest
+from typing import List, Dict
 
 systemPromptsRouter = APIRouter(
     prefix="/{gameName}/system-prompts",
     tags=["System Prompts"]
 )
 
-@systemPromptsRouter.get("/", response_model=List[SystemPromptResponse])
+@systemPromptsRouter.get("/", response_model=List[Dict])
 def get_all_system_prompts(gameName: str):
     """
     Get all system prompts for a specific game
@@ -19,7 +19,7 @@ def get_all_system_prompts(gameName: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@systemPromptsRouter.post("/", response_model=SystemPromptResponse)
+@systemPromptsRouter.post("/", response_model=Dict)
 def create_system_prompt(gameName: str, request: CreateSystemPromptRequest):
     """
     Create a new system prompt for a specific game
@@ -31,7 +31,7 @@ def create_system_prompt(gameName: str, request: CreateSystemPromptRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@systemPromptsRouter.put("/{promptId}", response_model=SystemPromptResponse)
+@systemPromptsRouter.put("/{promptId}", response_model=Dict)
 def update_system_prompt(gameName: str, promptId: str, request: UpdateSystemPromptRequest):
     """
     Update an existing system prompt

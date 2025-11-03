@@ -12,6 +12,7 @@ class SystemPromptResponse(BaseModel):
     systemPromptFileId: str
     knowledgeBase: List[str]
     dynamics: List[DynamicField]
+    assets: Optional[List[str]]
     outputFilename: str
     instructions: str
     createdAt: datetime
@@ -22,6 +23,7 @@ class CreateSystemPromptRequest(BaseModel):
     systemPromptFileId: str
     knowledgeBase: List[str]
     dynamics: List[DynamicField]
+    assets: List[str] = None
     outputFilename: str
     instructions: Optional[str] = None
 
@@ -30,5 +32,6 @@ class UpdateSystemPromptRequest(BaseModel):
     systemPromptFileId: Optional[str] = None
     knowledgeBase: Optional[List[str]] = None
     dynamics: Optional[List[DynamicField]] = None
+    assets: Optional[List[str]] = None
     outputFilename: Optional[str] = None
     instructions: Optional[str] = None
