@@ -1,7 +1,7 @@
 import os
 from google.cloud import storage
 from fastapi import HTTPException, status
-from typing import List, Optional
+from typing import List, Optional, Union
 import base64
 from app.core.services.fileService import fileServices
 from app.core.services.logService import logServices
@@ -15,6 +15,7 @@ import json
 from dotenv import load_dotenv
 from app.core.generalFunctions import generalFunction
 import re
+import mimetypes
 
 load_dotenv()
 
@@ -90,7 +91,7 @@ class GCSStorageService:
         except Exception as e:
             raise RuntimeError(e)
 
-    def upload_file(self, file_path: str, file_content: str, updated_by: str, file_id: Optional[str] = None) -> None:
+    def upload_file(self, file_path: str, file_content: Union[str, bytes], updated_by: str, file_id: Optional[str] = None) -> None:
         """
         Uploads a file to Google Cloud Storage and the Gemini File API via a direct REST call.
         """
@@ -103,13 +104,20 @@ class GCSStorageService:
         try:
         # 1. Upload to your Google Cloud Storage (no change here)
             blob = self.bucket.blob(file_path)
-            blob.upload_from_string(file_content)
+            # blob.upload_from_string(file_content)
+            if isinstance(file_content, str):
+                blob.upload_from_string(file_content)
+            elif isinstance(file_content, (bytes, bytearray)):
+                blob.upload_from_string(file_content)
+            else:
+                raise TypeError(f"Unsupported file_content type: {type(file_content)}")
 
             file_name = file_path.rsplit("/", 1)[-1]
             game_name = file_path.split("/", 1)[0]
 
             gemini_file_id = generalFunction.gemini_upload(file_name=file_name, file_content=file_content)
             file_type = fileServices.get_file_type(file_name)
+            raw_preview = file_content[:250] if isinstance(file_content, str) else None
 
             meta_kwargs = dict(
             fileName=file_name,
@@ -117,7 +125,7 @@ class GCSStorageService:
             gameName=game_name,
             createdAt=datetime.utcnow(),
             lastUpdatedAt=datetime.utcnow(),
-            raw_preview=file_content[:250],
+            raw_preview=raw_preview,
             geminiUploadTime=datetime.utcnow(),
             geminiFileId=gemini_file_id,
             fileType=file_type,
@@ -160,7 +168,10 @@ class GCSStorageService:
                 image_bytes = image_source
             blob = self.bucket.blob(file_path)
             file_type = fileServices.get_file_type(image_name)
-            blob.upload_from_string(image_bytes, content_type="image/png")
+            mime_type, _ = mimetypes.guess_type(image_name)
+            if mime_type is None:
+                mime_type = "application/octet-stream"
+            blob.upload_from_string(image_bytes, content_type=mime_type)
             image_base64 = base64.b64encode(image_bytes).decode("utf-8")
             gemini_file_id = generalFunction.gemini_image_upload(image_name, image_base64, is_base64=True)
             print(f"✅ Gemini upload complete: {gemini_file_id}")

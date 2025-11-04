@@ -28,6 +28,11 @@ class PresetServices:
         doc = self.collection.document(presetId).get()
         return doc.to_dict() if doc.exists else None
     
+    def get_preset_by_name(self, gameName: str, presetName: str):
+        docs = self.collection.where("gameName", "==", gameName).where("presetName", "==", presetName).get()
+        for doc in docs:
+            return doc.to_dict()
+    
     def delete_preset(self, presetId: str):
         self.collection.document(presetId).delete()
         return {

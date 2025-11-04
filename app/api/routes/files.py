@@ -39,9 +39,8 @@ async def upload_file(path: str = Form(...), file: UploadFile = File(...), usern
     try:
         content = await file.read()
         file_extension = file.filename.split(".")[-1].lower()
-        # googleStorageService.upload_file(file_path = path, file_content = content.decode("utf-8"), updated_by=username, file_id=fileId)
-        file_name = path.rsplit("/", 1)[-1]
-        game_name = path.split("/", 1)[0]
+        # file_name = path.rsplit("/", 1)[-1]
+        # game_name = path.split("/", 1)[0]
         if file_extension in ["txt", "md", "json", "csv"]:
             decoded_content = content.decode("utf-8")
             googleStorageService.upload_file(
@@ -51,13 +50,20 @@ async def upload_file(path: str = Form(...), file: UploadFile = File(...), usern
                 file_id=fileId,
             )
         # For PDFs or binary files, send raw bytes
-        else:
-            googleStorageService.upload_image(
-                image_name=file_name,
+        # else:
+        #     googleStorageService.upload_image(
+        #         image_name=file_name,
+        #         file_path=path,
+        #         image_source=content,
+        #         game_name=game_name,
+        #         is_base64=False
+        #     )
+        elif file_extension in ["pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx"]:
+            googleStorageService.upload_file(
                 file_path=path,
-                image_source=content,
-                game_name=game_name,
-                is_base64=False
+                file_content=content,  # bytes
+                updated_by=username,
+                file_id=fileId,
             )
         return {"message": "File uploaded successfully"}
     except HTTPException as he:
