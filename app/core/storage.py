@@ -36,13 +36,25 @@ class GCSStorageService:
             blobs = self.bucket.list_blobs()
             games = set()
             for blob in blobs:
-                parts = blob.name.split("/", 1)  # take text before first "/"
+                parts = blob.name.split("/", 1)
                 if parts and parts[0]:
                     games.add(parts[0])
 
             games_list = sorted(list(games))
+            excluded_games = {
+            "AI pet",
+            "Crazy_Girlfriend_Game",
+            "DELETE_thisCompanions",
+            "Mafia_Game",
+            "angad-odds-n-ends",
+            "api_test_game",
+            "college-sim",
+            "school-game",
+            "test_game",
+        }
+            filtered_games = [g for g in games_list if g not in excluded_games]
             print("games from bucket", games_list)
-            return games_list
+            return filtered_games
         except Exception as e:
             raise RuntimeError(f"Failed to list games: {e}")
     
