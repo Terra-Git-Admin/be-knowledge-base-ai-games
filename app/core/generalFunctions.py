@@ -52,8 +52,12 @@ class GeneralFunctions:
         
         metadata_payload = {"file": {"display_name": file_name}}
         mime_type, _ = mimetypes.guess_type(file_name)
-        if mime_type is None:
-            mime_type = "text/plain" 
+        # if mime_type is None:
+        #     mime_type = "text/plain"
+        if file_name.lower().endswith((".txt", ".md", ".json")):
+            mime_type = "text/plain"
+        elif mime_type is None:
+            mime_type = "application/octet-stream"
         
             # Structure for multipart/form-data request
         files_payload = {
