@@ -10,6 +10,7 @@ class VoiceModel(BaseModel):
     temperature: Optional[float] = None
     pitch: Optional[float] = None
     speedRate: Optional[float] = None
+    speechRate: Optional[float] = None
 
 class PresetVoiceModel(BaseModel):
     voiceName: str
@@ -17,7 +18,8 @@ class PresetVoiceModel(BaseModel):
     description: str
     temperature: Optional[float] = None
     pitch: Optional[float] = None
-    speedRate: Optional[float] = None
+    # speedRate: Optional[float] = None
+    speechRate: Optional[float] = None
 
 class PresetModel(BaseModel):
     presetId: str = Field(default_factory=lambda: generalFunction.generate_id("pre"))

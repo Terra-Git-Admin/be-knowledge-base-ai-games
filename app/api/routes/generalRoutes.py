@@ -1,8 +1,11 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import List, Dict, Any
 from app.core.services.systemPromptsService import system_prompts_service
 from app.core.services.presetServices import presetServices
+from app.core.services.gameLogsServices import gameLogsServices
+from app.core.services.logService import logServices
 
 
 
@@ -71,5 +74,49 @@ def get_all_mentioned_preset_so(request: RuntimeConfigPresets):
             "presetConfig": run_time_config,
             "message": f"Successfully fetched {counter} chat setup so for {request.gameName}"
         }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# @generalRouter.get("/games/{game_name}/logs")
+# def get_game_logs(game_name: str):
+#     try:
+#         return gameLogsServices.get_game_logs_for_all_players(game_name)
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=str(e))
+
+@generalRouter.get("/debug/collections")
+def get_all_collections():
+    try:
+        # return logServices.delete_all_logs()
+        return gameLogsServices.list_collections()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@generalRouter.get("/debug/players")
+def get_all_players():
+    try:
+        return gameLogsServices.list_players()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@generalRouter.get("/debug/export-all-data")
+def export_all_data():
+    try:
+        # return gameLogsServices.export_all_players_data()
+        pass
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@generalRouter.get("/debug/logs")
+def get_all_logs(
+    game_name: str | None = Query(None, description="Optional game name filter"),
+):
+    """
+    Returns all logs across players/games, optionally filtered by game or player.
+    Example: /debug/logs?game_name=debug-companions
+    """
+    try:
+        return gameLogsServices.get_all_logs()
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
