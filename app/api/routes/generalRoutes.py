@@ -114,3 +114,7 @@ def get_games_by_user(username: str = Query(...)):
 @generalRouter.get("/logs/by-user-game/details")
 def get_logs_by_user_game(username: str = Query(...), game_name: str = Query(...)):
     return gameLogsServices.get_logs_for_user_and_game(username, game_name)
+
+@generalRouter.get("/gamenames/debug")
+def get_game_names():
+    return gameLogsServices.get_all_games()
