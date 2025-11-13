@@ -14,7 +14,7 @@ class GameLogsServices:
     self,
     game_name: Optional[str] = None,
     username: Optional[str] = None,
-    limit: int = 100,
+    limit: int = 20,
     offset: int = 0,
 ) -> Dict:
         """

@@ -82,7 +82,7 @@ def get_all_mentioned_preset_so(request: RuntimeConfigPresets):
 def get_all_logs(
     game_name: str | None = Query(None, description="Optional game name filter"),
     username: str | None = Query(None, description="Optional username filter"),
-    limit: int = Query(100, description="Limit the number of logs returned"),
+    limit: int = Query(20, description="Limit the number of logs returned"),
     page: int = Query(0, description="Page number for pagination (starts at 0)"),
 ):
     """
