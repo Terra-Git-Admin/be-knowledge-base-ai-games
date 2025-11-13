@@ -157,4 +157,345 @@ class GameLogsServices:
         except Exception as e:
             raise Exception(f"Error fetching log by path: {e}")
 
+    def get_games_for_user(self, username: str) -> Dict[str, Any]:
+        """
+        Fetch all game names for a given username.
+        Example path: players/{username}/games/{gameName}
+        """
+        try:
+            user_ref = self.db.collection("players").document(username)
+            games_ref = user_ref.collection("games")
+
+            # List all game subcollections
+            games = []
+            for game_doc in games_ref.list_documents():
+                games.append(game_doc.id)
+
+            return {
+                "username": username,
+                "gamesCount": len(games),
+                "games": games
+            }
+        except Exception as e:
+            raise Exception(f"Error fetching games for user {username}: {e}")
+    
+    # def get_logs_for_user_and_game(
+    #     self, username: str, game_name: str, limit: int = 1000
+    # ) -> Dict[str, Any]:
+    #     """
+    #     Fetch all logs for a specific user and game.
+    #     Uses collection_group to query across all logs, then filters by path.
+    #     """
+    #     try:
+    #         print(f"\n🔍 DEBUG: Starting query for username='{username}', game_name='{game_name}'")
+            
+    #         # Input validation
+    #         if not username or not username.strip():
+    #             print("❌ Username is empty")
+    #             return {
+    #                 "error": "Username is required",
+    #                 "username": username,
+    #                 "gameName": game_name,
+    #                 "count": 0,
+    #                 "logs": []
+    #             }
+            
+    #         if not game_name or not game_name.strip():
+    #             print("❌ Game name is empty")
+    #             return {
+    #                 "error": "Game name is required",
+    #                 "username": username,
+    #                 "gameName": game_name,
+    #                 "count": 0,
+    #                 "logs": []
+    #             }
+
+    #         username = username.strip()
+    #         game_name = game_name.strip()
+    #         print(f"✓ Cleaned username: '{username}'")
+    #         print(f"✓ Cleaned game_name: '{game_name}'")
+
+    #         # Use collection_group to query all "logs" collections across the database
+    #         print("📋 Using collection_group to query all logs...")
+    #         logs_ref = self.db.collection_group("logs")
+            
+    #         # Try ordering by timestamp
+    #         try:
+    #             query = logs_ref.order_by("timestamp", direction=firestore.Query.DESCENDING)
+    #             print("✓ Query ordered by timestamp (descending)")
+    #         except Exception as order_error:
+    #             print(f"⚠️ Order by failed: {str(order_error)}")
+    #             print("📋 Falling back to unordered query...")
+    #             query = logs_ref
+
+    #         stream = query.stream()
+    #         logs: List[Dict] = []
+    #         count_checked = 0
+    #         count_matched = 0
+
+    #         for log in stream:
+    #             count_checked += 1
+    #             path = log.reference.path
+    #             print(f"\n📍 Checking log #{count_checked}: {path}")
+                
+    #             # Parse the path: players/{username}/games/{game_name}/logs/{log_id}
+    #             path_parts = path.split("/")
+    #             print(f"   Path parts: {path_parts}")
+                
+    #             if len(path_parts) < 6:
+    #                 print(f"   ⏭️ Skipping - invalid path structure")
+    #                 continue
+                
+    #             path_username = path_parts[1]
+    #             path_game_name = path_parts[3]
+                
+    #             print(f"   Path username: '{path_username}' vs '{username}' - Match: {path_username == username}")
+    #             print(f"   Path game: '{path_game_name}' vs '{game_name}' - Match: {path_game_name == game_name}")
+                
+    #             # Check if this log belongs to the requested user and game
+    #             if path_username != username:
+    #                 print(f"   ❌ Username mismatch, skipping")
+    #                 continue
+                    
+    #             if path_game_name != game_name:
+    #                 print(f"   ❌ Game name mismatch, skipping")
+    #                 continue
+
+    #             count_matched += 1
+    #             print(f"   ✅ MATCH FOUND! Processing...")
+                
+    #             log_data = log.to_dict() or {}
+    #             print(f"   Fields in document: {list(log_data.keys())}")
+
+    #             # Convert timestamp safely
+    #             ts = log_data.get("timestamp")
+    #             if isinstance(ts, datetime):
+    #                 date_str = ts.isoformat()
+    #             elif isinstance(ts, dict) and "seconds" in ts:
+    #                 date_str = datetime.utcfromtimestamp(ts["seconds"]).isoformat()
+    #             else:
+    #                 date_str = str(ts) if ts else None
+
+    #             # Extract structured prompt/response data
+    #             prompt_data = log_data.get("prompt", {}) or {}
+    #             response_content = log_data.get("response", "")
+
+    #             logs.append({
+    #                 "logId": log.id,
+    #                 "logPath": path,
+    #                 "date": date_str,
+    #                 "username": path_username,
+    #                 "gameName": path_game_name,
+    #                 "chat": {
+    #                     "prompt": {
+    #                         "systemPrompt": prompt_data.get("systemPrompt"),
+    #                         "prompt": prompt_data.get("prompt"),
+    #                         "files": prompt_data.get("files", []),
+    #                         "temperature": prompt_data.get("temperature"),
+    #                         "thinking": prompt_data.get("thinking"),
+    #                         "thinkingBudget": prompt_data.get("thinkingBudget"),
+    #                         "referencedAssets": prompt_data.get("referencedAssets", []),
+    #                         "isImgUploadPresent": prompt_data.get("isImgUploadPresent", False),
+    #                     },
+    #                     "response": response_content,
+    #                 },
+    #             })
+
+    #             if len(logs) >= limit:
+    #                 print(f"\n✅ Reached limit of {limit} logs")
+    #                 break
+
+    #         print(f"\n{'='*60}")
+    #         print(f"✅ Query complete!")
+    #         print(f"   Checked: {count_checked} documents")
+    #         print(f"   Matched: {count_matched} documents")
+    #         print(f"   Returned: {len(logs)} logs")
+    #         print(f"{'='*60}\n")
+
+    #         # Sort in memory by timestamp if needed (ascending = oldest first)
+    #         try:
+    #             logs.sort(key=lambda x: x.get("date") or "", reverse=False)
+    #             print("✓ Logs sorted by date (oldest first)")
+    #         except Exception as sort_error:
+    #             print(f"⚠️ Could not sort logs: {sort_error}")
+
+    #         return {
+    #             "username": username,
+    #             "gameName": game_name,
+    #             "count": len(logs),
+    #             "logs": logs,
+    #         }
+
+    #     except Exception as e:
+    #         print(f"❌ Error fetching logs: {str(e)}")
+    #         import traceback
+    #         traceback.print_exc()
+    #         return {
+    #             "error": f"Error fetching logs: {str(e)}",
+    #             "username": username,
+    #             "gameName": game_name,
+    #             "count": 0,
+    #             "logs": []
+    #         }
+    def get_logs_for_user_and_game(
+        self, username: str, game_name: str, limit: int = 1000
+    ) -> Dict[str, Any]:
+        """
+        Fetch all logs for a specific user and game using DIRECT PATH navigation.
+        This is MUCH faster than collection_group queries.
+        
+        Path: players/{username}/games/{game_name}/logs/{log_id}
+        """
+        try:
+            print(f"\n🔍 DEBUG: Starting DIRECT PATH query for username='{username}', game_name='{game_name}'")
+            
+            # Input validation
+            if not username or not username.strip():
+                print("❌ Username is empty")
+                return {
+                    "error": "Username is required",
+                    "username": username,
+                    "gameName": game_name,
+                    "count": 0,
+                    "logs": []
+                }
+            
+            if not game_name or not game_name.strip():
+                print("❌ Game name is empty")
+                return {
+                    "error": "Game name is required",
+                    "username": username,
+                    "gameName": game_name,
+                    "count": 0,
+                    "logs": []
+                }
+
+            username = username.strip()
+            game_name = game_name.strip()
+            print(f"✓ Cleaned username: '{username}'")
+            print(f"✓ Cleaned game_name: '{game_name}'")
+
+            # ============================================
+            # DIRECT PATH NAVIGATION (NO collection_group!)
+            # ============================================
+            print("📍 Building direct path reference...")
+            print(f"   players/{username}/games/{game_name}/logs")
+            
+            # Navigate directly to the logs collection
+            logs_ref = (
+                self.db.collection("players")
+                .document(username)
+                .collection("games")
+                .document(game_name)
+                .collection("logs")
+            )
+            
+            print("✓ Direct path reference created")
+
+            # Try ordering by timestamp
+            try:
+                print("📋 Attempting ordered query (by timestamp, descending)...")
+                query = logs_ref.order_by("timestamp", direction=firestore.Query.DESCENDING)
+                print("✓ Query ordered by timestamp (descending)")
+            except Exception as order_error:
+                print(f"⚠️ Order by failed: {str(order_error)}")
+                print("📋 Falling back to unordered query...")
+                query = logs_ref
+
+            # Stream results
+            print("🔄 Starting to fetch logs...")
+            stream = query.stream()
+            logs: List[Dict] = []
+            count_fetched = 0
+
+            for log in stream:
+                count_fetched += 1
+                log_id = log.id
+                log_path = log.reference.path
+                
+                print(f"\n📌 Processing log #{count_fetched}")
+                print(f"   Log ID: {log_id}")
+                print(f"   Path: {log_path}")
+
+                log_data = log.to_dict() or {}
+                print(f"   Fields: {list(log_data.keys())}")
+
+                # Convert timestamp safely
+                ts = log_data.get("timestamp")
+                if isinstance(ts, datetime):
+                    date_str = ts.isoformat()
+                    print(f"   Timestamp (datetime): {date_str}")
+                elif isinstance(ts, dict) and "seconds" in ts:
+                    date_str = datetime.utcfromtimestamp(ts["seconds"]).isoformat()
+                    print(f"   Timestamp (dict): {date_str}")
+                else:
+                    date_str = str(ts) if ts else None
+                    print(f"   Timestamp (other): {date_str}")
+
+                # Extract structured prompt/response data
+                prompt_data = log_data.get("prompt", {}) or {}
+                response_content = log_data.get("response", "")
+                
+                prompt_preview = (prompt_data.get("prompt", "")[:100] + "...") if prompt_data.get("prompt") else "No prompt"
+                response_preview = (response_content[:100] + "...") if response_content else "No response"
+                print(f"   Prompt: {prompt_preview}")
+                print(f"   Response: {response_preview}")
+
+                logs.append({
+                    "logId": log_id,
+                    "logPath": log_path,
+                    "date": date_str,
+                    "username": username,
+                    "gameName": game_name,
+                    "chat": {
+                        "prompt": {
+                            "systemPrompt": prompt_data.get("systemPrompt"),
+                            "prompt": prompt_data.get("prompt"),
+                            "files": prompt_data.get("files", []),
+                            "temperature": prompt_data.get("temperature"),
+                            "thinking": prompt_data.get("thinking"),
+                            "thinkingBudget": prompt_data.get("thinkingBudget"),
+                            "referencedAssets": prompt_data.get("referencedAssets", []),
+                            "isImgUploadPresent": prompt_data.get("isImgUploadPresent", False),
+                        },
+                        "response": response_content,
+                    },
+                })
+
+                if len(logs) >= limit:
+                    print(f"\n✅ Reached limit of {limit} logs")
+                    break
+
+            print(f"\n{'='*60}")
+            print(f"✅ QUERY COMPLETE!")
+            print(f"   Total fetched: {count_fetched} documents")
+            print(f"   Total returned: {len(logs)} logs")
+            print(f"{'='*60}\n")
+
+            # Sort in memory by timestamp (oldest first = ascending)
+            try:
+                logs.sort(key=lambda x: x.get("date") or "", reverse=False)
+                print("✓ Logs sorted by date (oldest first)")
+            except Exception as sort_error:
+                print(f"⚠️ Could not sort logs: {sort_error}")
+
+            return {
+                "username": username,
+                "gameName": game_name,
+                "count": len(logs),
+                "logs": logs,
+            }
+
+        except Exception as e:
+            print(f"❌ Error fetching logs: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return {
+                "error": f"Error fetching logs: {str(e)}",
+                "username": username,
+                "gameName": game_name,
+                "count": 0,
+                "logs": []
+            }
+
 gameLogsServices = GameLogsServices()

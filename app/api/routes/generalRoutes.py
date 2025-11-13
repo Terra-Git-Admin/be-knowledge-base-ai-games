@@ -106,3 +106,11 @@ def get_log_by_path(log_path: str = Query(..., description="Full Firestore path 
         return gameLogsServices.get_log_by_path(log_path)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@generalRouter.get("/games/by-user")
+def get_games_by_user(username: str = Query(...)):
+    return gameLogsServices.get_games_for_user(username)
+
+@generalRouter.get("/logs/by-user-game/details")
+def get_logs_by_user_game(username: str = Query(...), game_name: str = Query(...)):
+    return gameLogsServices.get_logs_for_user_and_game(username, game_name)
