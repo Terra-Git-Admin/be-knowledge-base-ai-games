@@ -2,6 +2,8 @@ import os
 from google.cloud import firestore
 from typing import List, Dict, Any, Optional
 from datetime import datetime
+from app.core.services.fileService import fileServices
+import mimetypes
 
 db = firestore.Client(project="aigameschat", database="school-game")
 
@@ -57,6 +59,20 @@ class SystemPromptsService:
             docs = subcollection_ref.where('title', '==', prompt_name).stream()
             for doc in docs:
                 prompt_data = doc.to_dict()
+                k_files = prompt_data.get("knowledgeBase", []) or []
+                prompt_data.setdefault("fileMetaData", [])
+                for k_file in k_files:
+                    file_path = f"{game_name}/knowledge-base/{k_file}"
+                    fileData = fileServices.get_file_by_name_and_game(file_path, game_name)
+                    mime_type, _ = mimetypes.guess_type(k_file)
+                    if k_file.lower().endswith((".txt", ".md", ".json")):
+                        mime_type = "text/plain"
+                    if fileData:
+                        prompt_data["fileMetaData"].append({
+                            "name": k_file,
+                            "fileId": fileData.geminiFileId,
+                            "mimeType": mime_type or "application/octet-stream"
+                        })
                 prompt_data['id'] = doc.id
                 return prompt_data
             return None

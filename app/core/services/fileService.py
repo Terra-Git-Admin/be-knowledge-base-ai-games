@@ -59,8 +59,8 @@ class FileServices:
         doc = doc_ref.get()
         return doc.to_dict()
     
-    def get_file_by_name_and_game(self, file_name: str, game_name: str) -> Optional[FileMetaData]:
-        docs = self.collection.where("fileName", "==", file_name).where("gameName", "==", game_name).stream()
+    def get_file_by_name_and_game(self, file_path: str, game_name: str) -> Optional[FileMetaData]:
+        docs = self.collection.where("filePath", "==", file_path).where("gameName", "==", game_name).stream()
         for doc in docs:
             return FileMetaData(**doc.to_dict())
         return None
