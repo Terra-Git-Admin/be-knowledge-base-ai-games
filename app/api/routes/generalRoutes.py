@@ -5,7 +5,7 @@ from typing import List, Dict, Any
 from app.core.services.systemPromptsService import system_prompts_service
 from app.core.services.presetServices import presetServices
 from app.core.services.gameLogsServices import gameLogsServices
-from app.core.schema.gamesLogsSchema import GameLogs
+from app.core.schema.gamesLogsSchema import PromptSchema, GameLogs
 
 
 
@@ -25,6 +25,12 @@ class RuntimeConfig(BaseModel):
 class RuntimeConfigPresets(BaseModel):
     gameName: str
     preset_so: List[str]
+
+class CreateGameLogData(BaseModel):
+    username: str
+    gameName: str
+    prompt: PromptSchema
+    response: str
 
 @generalRouter.post("/chat-setup-so/system-prompts")
 def get_system_prompt_by_name(request: PromptRequest):
@@ -120,6 +126,11 @@ def get_logs_by_user_game(username: str = Query(...), game_name: str = Query(...
 def get_game_names():
     return gameLogsServices.get_all_games()
 
-@generalRouter.post("/logs/by-user-game/{username}/{gameName}")
-def create_game_logs(logsData: GameLogs, username: str, gameName: str):
-    return gameLogsServices.create_game_runtime_logs(logsData, username, gameName)
+@generalRouter.post("/logs/by-user-game")
+def create_game_logs(gamelogs: CreateGameLogData):
+    logsData = GameLogs(
+        prompt=gamelogs.prompt,
+        response=gamelogs.response,
+        timestamp=None
+    )
+    return gameLogsServices.create_game_runtime_logs(logsData, gamelogs.username, gamelogs.gameName)
