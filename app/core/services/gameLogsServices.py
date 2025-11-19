@@ -1,6 +1,7 @@
 from google.cloud import firestore
 from typing import List, Dict, Any, Optional
 from datetime import datetime
+from app.core.schema.gamesLogsSchema import GameLogs
 
 db = firestore.Client(project="aigameschat", database="school-game")
 
@@ -96,209 +97,6 @@ class GameLogsServices:
             "batches": paged_batches,
             "note": f"Grouped by username + gameName + date; showing {len(paged_batches)} groups",
         }
-
-    
-#     def get_all_logs(
-#     self,
-#     game_name: Optional[str] = None,
-#     username: Optional[str] = None,
-#     limit: int = 20,
-#     offset: int = 0,
-# ) -> Dict:
-#         """
-#         Fetch logs grouped by (username, gameName, date),
-#         but only keep one representative log per group (for speed).
-#         """
-
-#         logs_ref = self.db.collection_group("logs")
-#         query = logs_ref.order_by("timestamp", direction=firestore.Query.DESCENDING)
-#         stream = query.stream()
-
-#         grouped: Dict[str, Dict] = {}
-
-#         for log in stream:
-#             path_parts = log.reference.path.split("/")
-#             if len(path_parts) < 6:
-#                 continue
-
-#             username_in_path = path_parts[1].strip('"')
-#             game_id = path_parts[3]
-#             log_id = path_parts[5]
-
-#             # --- filters ---
-#             if game_name and game_id != game_name:
-#                 continue
-#             if username and username_in_path.lower() != username.lower():
-#                 continue
-
-#             log_data = log.to_dict()
-#             ts = log_data.get("timestamp")
-
-#             # Normalize timestamp
-#             if isinstance(ts, datetime):
-#                 iso_ts = ts.isoformat()
-#                 date_key = ts.date().isoformat()
-#             elif isinstance(ts, dict) and "seconds" in ts:
-#                 dt = datetime.utcfromtimestamp(ts["seconds"])
-#                 iso_ts = dt.isoformat()
-#                 date_key = dt.date().isoformat()
-#             else:
-#                 iso_ts = None
-#                 date_key = "unknown"
-
-#             # Group key: username + gameName + date
-#             key = f"{username_in_path}|{game_id}|{date_key}"
-
-#             prompt_data = log_data.get("prompt", {}) or {}
-#             response_content = log_data.get("response", "")
-
-#             # If group exists → just increment count
-#             if key in grouped:
-#                 grouped[key]["logsCount"] += 1
-#                 continue
-
-#             # First log of this group — store minimal preview
-#             grouped[key] = {
-#                 "username": username_in_path,
-#                 "gameName": game_id,
-#                 "date": date_key,
-#                 "logsCount": 1,
-#                 "sampleLog": {  # minimal preview for UI
-#                     "logId": log_id,
-#                     "timestamp": iso_ts,
-#                     "prompt": prompt_data.get("prompt"),
-#                     "response": response_content,
-#                     "isImgUploadPresent": prompt_data.get("isImgUploadPresent", False),
-#                     "files": prompt_data.get("files", []),
-#                 },
-#             }
-
-#         # Convert to list and sort by most recent date
-#         batches = list(grouped.values())
-#         batches.sort(key=lambda x: x["date"], reverse=True)
-
-#         # Apply pagination
-#         total_groups = len(batches)
-#         paged_batches = batches[offset: offset + limit]
-
-#         return {
-#             "count": total_groups,
-#             "page": offset // limit + 1,
-#             "limit": limit,
-#             "batches": paged_batches,
-#             "note": f"Fast mode: showing {len(paged_batches)} grouped summaries "
-#                     f"out of {total_groups} total user-game-days",
-#         }
-
-
-
-#     def get_all_logs(
-#     self,
-#     game_name: Optional[str] = None,
-#     username: Optional[str] = None,
-#     limit: int = 20,
-#     offset: int = 0,
-# ) -> Dict:
-#         """
-#         Fetch logs grouped by (username, gameName, date),
-#         then paginate the grouped results.
-#         """
-
-#         logs_ref = self.db.collection_group("logs")
-#         query = logs_ref.order_by("timestamp", direction=firestore.Query.DESCENDING)
-
-#         stream = query.stream()
-#         grouped: Dict[str, Dict] = {}
-
-#         for log in stream:
-#             path_parts = log.reference.path.split("/")
-#             if len(path_parts) < 6:
-#                 continue
-
-#             username_in_path = path_parts[1].strip('"')
-#             game_id = path_parts[3]
-#             log_id = path_parts[5]
-
-#             # --- filters ---
-#             if game_name and game_id != game_name:
-#                 continue
-#             if username and username_in_path.lower() != username.lower():
-#                 continue
-
-#             log_data = log.to_dict()
-#             ts = log_data.get("timestamp")
-
-#             # Normalize timestamp
-#             if isinstance(ts, datetime):
-#                 iso_ts = ts.isoformat()
-#                 date_key = ts.date().isoformat()
-#             elif isinstance(ts, dict) and "seconds" in ts:
-#                 dt = datetime.utcfromtimestamp(ts["seconds"])
-#                 iso_ts = dt.isoformat()
-#                 date_key = dt.date().isoformat()
-#             else:
-#                 iso_ts = None
-#                 date_key = "unknown"
-
-#             # ✅ group by username + gameName + date
-#             key = f"{username_in_path}|{game_id}|{date_key}"
-
-#             prompt_data = log_data.get("prompt", {}) or {}
-#             response_content = log_data.get("response", "")
-
-#             log_entry = {
-#                 "logId": log_id,
-#                 "logPath": log.reference.path,
-#                 "timestamp": iso_ts,
-#                 "username": username_in_path,
-#                 "gameName": game_id,
-#                 "chat": {
-#                     "prompt": {
-#                         "systemPrompt": prompt_data.get("systemPrompt"),
-#                         "prompt": prompt_data.get("prompt"),
-#                         "files": prompt_data.get("files", []),
-#                         "temperature": prompt_data.get("temperature"),
-#                         "thinking": prompt_data.get("thinking"),
-#                         "thinkingBudget": prompt_data.get("thinkingBudget"),
-#                         "referencedAssets": prompt_data.get("referencedAssets", []),
-#                         "isImgUploadPresent": prompt_data.get("isImgUploadPresent", False),
-#                     },
-#                     "response": response_content,
-#                 },
-#             }
-
-#             if key not in grouped:
-#                 grouped[key] = {
-#                     "username": username_in_path,
-#                     "gameName": game_id,
-#                     "date": date_key,
-#                     "logs": [],
-#                 }
-
-#             grouped[key]["logs"].append(log_entry)
-
-#         # --- Build grouped list ---
-#         batches = []
-#         for data in grouped.values():
-#             data["logsCount"] = len(data["logs"])
-#             # sort logs oldest → newest
-#             data["logs"].sort(key=lambda x: x["timestamp"] or "")
-#             batches.append(data)
-
-#         # Sort groups by date descending
-#         batches.sort(key=lambda x: x["date"], reverse=True)
-
-#         # ✅ Apply pagination after grouping
-#         total_groups = len(batches)
-#         paged_batches = batches[offset: offset + limit]
-
-#         return {
-#             "count": total_groups,
-#             "page": offset // limit + 1,
-#             "limit": limit,
-#             "batches": paged_batches,
-#             "note": f"Grouped by username + gameName + date; showing {len(paged_batches)} groups out of {total_groups}",
-#         }
 
     def get_log_by_path(self, log_path: str) -> Dict:
         """
@@ -558,6 +356,16 @@ class GameLogsServices:
 
         except Exception as e:
             raise Exception(f"Error fetching all games: {e}")
+    
+    def create_game_runtime_logs(self, gameLogData: GameLogs, username: str, gameName: str):
+        try:
+            doc_ref = (self.db.collection("players").document(username).collection("games").document(gameName).collection("logs").document())
+            data = gameLogData.model_dump(exclude_none=True)
+            data["timestamp"] = datetime.utcnow()
+            doc_ref.set(data)
+            return {"success": True}
+        except Exception as e:
+            raise Exception(f"Error creating game runtime logs: {e}")
 
 
 gameLogsServices = GameLogsServices()

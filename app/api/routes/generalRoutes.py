@@ -5,6 +5,7 @@ from typing import List, Dict, Any
 from app.core.services.systemPromptsService import system_prompts_service
 from app.core.services.presetServices import presetServices
 from app.core.services.gameLogsServices import gameLogsServices
+from app.core.schema.gamesLogsSchema import GameLogs
 
 
 
@@ -118,3 +119,7 @@ def get_logs_by_user_game(username: str = Query(...), game_name: str = Query(...
 @generalRouter.get("/gamenames/debug")
 def get_game_names():
     return gameLogsServices.get_all_games()
+
+@generalRouter.post("/logs/by-user-game/{username}/{gameName}")
+def create_game_logs(logsData: GameLogs, username: str, gameName: str):
+    return gameLogsServices.create_game_runtime_logs(logsData, username, gameName)
