@@ -2,6 +2,7 @@ from google.cloud import firestore
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 from app.core.schema.gamesLogsSchema import GameLogs
+from app.core.generalFunctions import generalFunction
 
 db = firestore.Client(project="aigameschat", database="school-game")
 
@@ -28,6 +29,7 @@ class GameLogsServices:
 
         stream = query.stream()
         grouped: Dict[str, Dict] = {}
+        found_usernames = set()
 
         for log in stream:
             path_parts = log.reference.path.split("/")
@@ -78,7 +80,7 @@ class GameLogsServices:
                     },
                     "logsCount": 1,  # default count
                 }
-
+                found_usernames.add(username_in_path)
             # stop early once we have enough for pagination + buffer
             if len(grouped) >= offset + limit + 10:
                 break
@@ -86,6 +88,10 @@ class GameLogsServices:
         # Convert to list + sort
         batches = list(grouped.values())
         batches.sort(key=lambda x: x["date"], reverse=True)
+        display_name_map = generalFunction.get_display_names_from_api(list(found_usernames))
+
+        for b in batches:
+            b["displayName"] = display_name_map.get(b["username"], b["username"])
 
         total_groups = len(batches)
         paged_batches = batches[offset: offset + limit]

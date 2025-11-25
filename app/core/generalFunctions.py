@@ -11,8 +11,21 @@ import mimetypes
 load_dotenv()
 
 class GeneralFunctions:
+    DISPLAY_NAME_API = "https://ai-stage-api.letsterra.com/dash/users/display"
+    # DISPLAY_NAME_API = "http://localhost:4000/dash/users/display"
     def __init__(self):
         self.gemini_api_key = os.getenv("GENAI_API_KEY")
+    
+    def get_display_names_from_api(self, usernames):
+        """Call your Node API to get display names."""
+        try:
+            resp = requests.post(self.DISPLAY_NAME_API, json=usernames, timeout=5)
+            if resp.status_code == 200:
+                return resp.json()
+            return {}
+        except Exception as e:
+            print("Error fetching display names:", e)
+            return {}
 
     def generate_id(self, initials: str) -> str:
         return f"{initials}-{str(uuid.uuid4())}"
