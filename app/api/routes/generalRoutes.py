@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from app.core.services.systemPromptsService import system_prompts_service
 from app.core.services.presetServices import presetServices
 from app.core.services.gameLogsServices import gameLogsServices
@@ -29,8 +29,9 @@ class RuntimeConfigPresets(BaseModel):
 class CreateGameLogData(BaseModel):
     username: str
     gameName: str
-    prompt: PromptSchema
-    response: str
+    prompt: Optional[PromptSchema] = None
+    gameTextLog: Optional[str] = None
+    response: Optional[str] = None
 
 @generalRouter.post("/chat-setup-so/system-prompts")
 def get_system_prompt_by_name(request: PromptRequest):
@@ -130,6 +131,7 @@ def get_game_names():
 def create_game_logs(gamelogs: CreateGameLogData):
     logsData = GameLogs(
         prompt=gamelogs.prompt,
+        gameTextLog=gamelogs.gameTextLog,
         response=gamelogs.response,
         timestamp=None
     )

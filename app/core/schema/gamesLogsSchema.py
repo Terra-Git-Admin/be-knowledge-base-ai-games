@@ -15,6 +15,7 @@ class PromptSchema(BaseModel):
 
 
 class GameLogs(BaseModel):
-    prompt: PromptSchema
+    prompt: Optional[PromptSchema] = None
+    gameTextLog: Optional[str] = None
     response: Optional[str] = None
     timestamp: Optional[str] = None

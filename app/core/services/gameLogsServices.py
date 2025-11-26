@@ -291,6 +291,7 @@ class GameLogsServices:
                     "date": date_str,
                     "username": username,
                     "gameName": game_name,
+                    "gameTextLog": log_data.get("gameTextLog"),
                     "chat": {
                         "prompt": {
                             "systemPrompt": prompt_data.get("systemPrompt"),
