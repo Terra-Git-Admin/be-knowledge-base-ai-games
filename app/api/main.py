@@ -16,6 +16,7 @@ from app.api.routes.npc import npcRouter
 from app.api.routes.chatState import chatStateRouter
 from app.api.routes.presetState import presetRouter
 from app.api.routes.generalRoutes import generalRouter
+from app.api.routes.plotpixRoute import plotpixRouter
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -50,6 +51,7 @@ app.include_router(npcRouter)
 app.include_router(chatStateRouter)
 app.include_router(presetRouter)
 app.include_router(generalRouter)
+app.include_router(plotpixRouter)
 
 
 @app.on_event("startup")
