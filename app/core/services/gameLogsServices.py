@@ -319,7 +319,7 @@ class GameLogsServices:
 
             # Sort in memory by timestamp (oldest first = ascending)
             try:
-                logs.sort(key=lambda x: x.get("date") or "", reverse=False)
+                logs.sort(key=lambda x: x.get("date") or "", reverse=True)
                 print("✓ Logs sorted by date (oldest first)")
             except Exception as sort_error:
                 print(f"⚠️ Could not sort logs: {sort_error}")
