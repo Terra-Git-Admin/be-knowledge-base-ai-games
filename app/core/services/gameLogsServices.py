@@ -16,6 +16,8 @@ class GameLogsServices:
     self,
     game_name: Optional[str] = None,
     username: Optional[str] = None,
+    start_date: Optional[datetime] = None,
+    end_date: Optional[datetime] = None,
     limit: int = 20,
     offset: int = 0,
 ) -> Dict:
@@ -26,6 +28,11 @@ class GameLogsServices:
 
         logs_ref = self.db.collection_group("logs")
         query = logs_ref.order_by("timestamp", direction=firestore.Query.DESCENDING)
+        if start_date:
+            query = query.where("timestamp", ">=", start_date)
+        if end_date:
+            end_date = end_date.replace(hour=23, minute=59, second=59)
+            query = query.where("timestamp", "<=", end_date)
 
         stream = query.stream()
         grouped: Dict[str, Dict] = {}

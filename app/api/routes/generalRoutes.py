@@ -1,13 +1,13 @@
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+
 from fastapi import APIRouter, HTTPException, Query
-from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from typing import List, Dict, Any, Optional
-from app.core.services.systemPromptsService import system_prompts_service
-from app.core.services.presetServices import presetServices
+
+from app.core.schema.gamesLogsSchema import GameLogs, PromptSchema
 from app.core.services.gameLogsServices import gameLogsServices
-from app.core.schema.gamesLogsSchema import PromptSchema, GameLogs
-
-
+from app.core.services.presetServices import presetServices
+from app.core.services.systemPromptsService import system_prompts_service
 
 generalRouter = APIRouter(
     prefix="/files",
@@ -90,6 +90,8 @@ def get_all_mentioned_preset_so(request: RuntimeConfigPresets):
 def get_all_logs(
     game_name: str | None = Query(None, description="Optional game name filter"),
     username: str | None = Query(None, description="Optional username filter"),
+    start_date: str | None = Query(None, description="Optional start date filter"),
+    end_date: str | None = Query(None, description="Optional end date filter"),
     limit: int = Query(20, description="Limit the number of logs returned"),
     page: int = Query(0, description="Page number for pagination (starts at 0)"),
 ):
@@ -99,7 +101,9 @@ def get_all_logs(
     """
     try:
         offset = page * limit
-        return gameLogsServices.get_all_logs(game_name=game_name, username=username, limit=limit, offset=offset)
+        start_dt = datetime.fromisoformat(start_date) if start_date else None
+        end_dt = datetime.fromisoformat(end_date) if end_date else None
+        return gameLogsServices.get_all_logs(game_name=game_name, username=username, start_date=start_dt, end_date=end_dt, limit=limit, offset=offset)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
