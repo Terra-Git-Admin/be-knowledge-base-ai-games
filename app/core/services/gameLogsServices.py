@@ -249,12 +249,14 @@ class GameLogsServices:
                 print("📋 Attempting ordered query (by timestamp, descending)...")
                 if start_date and end_date:
                     print(f"📅 Filtering logs between {start_date} and {end_date}")
+                    end_date = end_date.replace(hour=23, minute=59, second=59)
                     query = query.where("timestamp", ">=", start_date).where("timestamp", "<=", end_date)
                 elif start_date:
                     print(f"📅 Filtering logs from {start_date} onward")
                     query = query.where("timestamp", ">=", start_date)
                 elif end_date:
                     print(f"📅 Filtering logs up to {end_date}")
+                    end_date = end_date.replace(hour=23, minute=59, second=59)
                     query = query.where("timestamp", "<=", end_date)
 
                 query = query.order_by("timestamp", direction=firestore.Query.DESCENDING)
