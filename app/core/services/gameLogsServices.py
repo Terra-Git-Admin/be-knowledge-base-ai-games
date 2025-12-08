@@ -189,7 +189,7 @@ class GameLogsServices:
     
 
     def get_logs_for_user_and_game(
-        self, username: str, game_name: str, limit: int = 1000
+        self, username: str, game_name: str, start_date, end_date, limit: int = 1000
     ) -> Dict[str, Any]:
         """
         Fetch all logs for a specific user and game using DIRECT PATH navigation.
@@ -244,9 +244,20 @@ class GameLogsServices:
             print("✓ Direct path reference created")
 
             # Try ordering by timestamp
+            query = logs_ref
             try:
                 print("📋 Attempting ordered query (by timestamp, descending)...")
-                query = logs_ref.order_by("timestamp", direction=firestore.Query.DESCENDING)
+                if start_date and end_date:
+                    print(f"📅 Filtering logs between {start_date} and {end_date}")
+                    query = query.where("timestamp", ">=", start_date).where("timestamp", "<=", end_date)
+                elif start_date:
+                    print(f"📅 Filtering logs from {start_date} onward")
+                    query = query.where("timestamp", ">=", start_date)
+                elif end_date:
+                    print(f"📅 Filtering logs up to {end_date}")
+                    query = query.where("timestamp", "<=", end_date)
+
+                query = query.order_by("timestamp", direction=firestore.Query.DESCENDING)
                 print("✓ Query ordered by timestamp (descending)")
             except Exception as order_error:
                 print(f"⚠️ Order by failed: {str(order_error)}")
@@ -324,7 +335,6 @@ class GameLogsServices:
             print(f"   Total returned: {len(logs)} logs")
             print(f"{'='*60}\n")
 
-            # Sort in memory by timestamp (oldest first = ascending)
             try:
                 logs.sort(key=lambda x: x.get("date") or "", reverse=True)
                 print("✓ Logs sorted by date (oldest first)")

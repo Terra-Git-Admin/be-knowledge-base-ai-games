@@ -124,8 +124,10 @@ def get_games_by_user(username: str = Query(...)):
     return gameLogsServices.get_games_for_user(username)
 
 @generalRouter.get("/logs/by-user-game/details")
-def get_logs_by_user_game(username: str = Query(...), game_name: str = Query(...)):
-    return gameLogsServices.get_logs_for_user_and_game(username, game_name)
+def get_logs_by_user_game(username: str = Query(...), game_name: str = Query(...), start_date: str | None = Query(None), end_date: str | None = Query(None)):
+    st_date = datetime.fromisoformat(start_date) if start_date else None
+    ed_date = datetime.fromisoformat(end_date) if end_date else None
+    return gameLogsServices.get_logs_for_user_and_game(username, game_name, st_date, ed_date)
 
 @generalRouter.get("/gamenames/debug")
 def get_game_names():
