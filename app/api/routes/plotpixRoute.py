@@ -26,3 +26,7 @@ def update_homescreen_data(data: dict):
 @plotpixRouter.put("/update/stage/plotpix")
 def update_stage_homescreen_data(data: dict):
     return plotPixServices.update_stage_homescreen_data(data)
+
+@plotpixRouter.patch("/update/parameters/plotpix/{platform}")
+def update_params(data: dict, platform: str):
+    return plotPixServices.update_given_parameters(data, platform)
