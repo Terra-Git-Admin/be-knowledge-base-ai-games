@@ -57,8 +57,10 @@ app.include_router(plotpixRouter)
 @app.on_event("startup")
 def on_startup():
     # start_scheduler(test_mode=True)
-    start_scheduler(test_mode=False)
+    # start_scheduler(test_mode=False)
+    pass
 
 @app.on_event("shutdown")
 def on_shutdown():
-    scheduler.shutdown()
+    # scheduler.shutdown()
+    pass

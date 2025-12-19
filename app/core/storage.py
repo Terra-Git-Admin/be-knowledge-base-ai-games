@@ -126,8 +126,9 @@ class GCSStorageService:
 
             file_name = file_path.rsplit("/", 1)[-1]
             game_name = file_path.split("/", 1)[0]
+            gemini_file_id=""
 
-            gemini_file_id = generalFunction.gemini_upload(file_name=file_name, file_content=file_content)
+            # gemini_file_id = generalFunction.gemini_upload(file_name=file_name, file_content=file_content)
             file_type = fileServices.get_file_type(file_name)
             raw_preview = file_content[:250] if isinstance(file_content, str) else None
 
@@ -213,6 +214,7 @@ class GCSStorageService:
             file_name = file_path.rsplit("/", 1)[-1]
             game_name = file_path.split("/", 1)[0]
             gemini_file_id = generalFunction.gemini_upload(file_name=file_name, file_content=content)
+            # gemini_file_id = generalFunction.gemini_upload(file_name=file_name, file_content=content)
 
             existing_docs = fileServices.collection.where("filePath", "==", file_path).stream()
             existing_doc = None

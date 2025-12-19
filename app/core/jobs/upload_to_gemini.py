@@ -153,10 +153,10 @@ def upload_files_to_gemini(game_id: str):
                             data = data.decode("utf-8")
                         except Exception:
                             pass
-                    gemini_file_id = generalFunction.gemini_upload(
-                        file_name=file_name,
-                        file_content=data
-                    )
+                    # gemini_file_id = generalFunction.gemini_upload(
+                    #     file_name=file_name,
+                    #     file_content=data
+                    # )
 
                 print(f"✅ Uploaded {file_name} to Gemini: {gemini_file_id}")
                 break

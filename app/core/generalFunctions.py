@@ -78,13 +78,14 @@ class GeneralFunctions:
             'file': (file_name, file_content, mime_type),
         }
         print(f"✅ Uploading '{file_name}' with MIME type: {mime_type}")
-        response = requests.post(gemini_upload_url, files=files_payload, timeout=30)
+        # response = requests.post(gemini_upload_url, files=files_payload, timeout=30)
     
         # This will raise an error for 4xx/5xx responses, which is caught by the except block
-        response.raise_for_status() 
+        # response.raise_for_status() 
     
-        response_data = response.json()
-        gemini_file_id = response_data['file']['name']
+        # response_data = response.json()
+        gemini_file_id = ""
+        # gemini_file_id = response_data['file']['name']
         print(f"✅ Successfully uploaded to Gemini. File ID: {gemini_file_id}")
         return gemini_file_id
     
@@ -109,11 +110,12 @@ class GeneralFunctions:
     }
 
         print(f"📤 Uploading image '{image_name}' to Gemini...")
-        response = requests.post(gemini_upload_url, files=files_payload, timeout=30)
-        response.raise_for_status()
+        # response = requests.post(gemini_upload_url, files=files_payload, timeout=30)
+        # response.raise_for_status()
 
-        data = response.json()
-        gemini_file_id = data["file"]["name"]
+        # data = response.json()
+        # gemini_file_id = data["file"]["name"]
+        gemini_file_id = ""
 
         print(f"✅ Uploaded successfully to Gemini. File ID: {gemini_file_id}")
         return gemini_file_id
